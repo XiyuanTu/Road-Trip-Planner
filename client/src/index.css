@@ -1,0 +1,130 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.mapboxgl-popup {
+  padding: 0.5rem;
+}
+
+.mapboxgl-popup img {
+  height: auto;
+  width: 100%;
+  text-align: center;
+  margin: 0 auto;
+  display: block;
+}
+
+.mapboxgl-popup .mapboxgl-popup-content {
+  padding-top: 20px;
+}
+
+.mapboxgl-popup .mapboxgl-popup-close-button {
+  right: 0;
+  top: 0;
+  font-size: 20px;
+}
+
+.error {
+  color: #f05305;
+}
+
+.entry-form label,
+.entry-form input,
+.entry-form textarea,
+.entry-form button {
+  font-size: 1rem;
+  margin: 0.5rem 0;
+  display: block;
+  width: 100%;
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.button-container button {
+  flex: 1;
+  margin: 5px;
+}
+
+.login {
+  min-height: 100vh;
+}
+
+.bg-image {
+  background-image: url('https://i.etsystatic.com/42798224/r/il/24e88b/4900612127/il_1588xN.4900612127_bbni.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.login-heading {
+  font-weight: 300;
+}
+
+.btn-login {
+  font-size: 0.9rem;
+  letter-spacing: 0.05rem;
+  padding: 0.75rem 1rem;
+}
+
+.register-body {
+  background: #007bff;
+  background: linear-gradient(to right, greenyellow, #33AEFF);
+}
+
+.card-img-left {
+  width: 45%;
+  /* Link to your background image using in the property below! */
+  background: scroll center url('https://i.etsystatic.com/42798224/r/il/24e88b/4900612127/il_1588xN.4900612127_bbni.jpg');
+  background-size: cover;
+}
+
+.btn-login {
+  font-size: 0.9rem;
+  letter-spacing: 0.05rem;
+  padding: 0.75rem 1rem;
+}
+
+.btn-google {
+  color: white !important;
+  background-color: #ea4335 !important;;
+}
+
+.btn-facebook {
+  color: white !important;
+  background-color: #3b5998 !important;;
+}
+
+/* Styling for the search box */
+.mapboxgl-ctrl-geocoder {
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Styling for search results */
+.mapboxgl-ctrl-geocoder .suggestions {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Styling the search input field */
+.mapboxgl-ctrl-geocoder--input {
+  padding: 8px;
+}
+
+/* Styling for the active or hovered suggestion */
+.mapboxgl-ctrl-geocoder .suggestions > .active, .mapboxgl-ctrl-geocoder .suggestions > li:hover {
+  background-color: #f8f8f8;
+  cursor: pointer;
+}
