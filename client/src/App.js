@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
@@ -17,7 +17,7 @@ import Map, {
 } from 'react-map-gl';
 
 import { listLogEntries, deleteLogEntry } from "./API/logAPI";
-import { deleteUser } from "./API/userAPI";
+import {deleteUser} from "./API/userAPI";
 import ConfirmationModal from './API/confirmation-modal';
 
 import LogEntryForm from "./forms/log-entry-form";
@@ -25,12 +25,12 @@ import AuthPage from './forms/auth-page';
 
 import GeocoderControl from './geocoder-control';
 
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 
 import { initializeApp } from "firebase/app";
 
 const firebaseConfig = {
-    apiKey: '',
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
     authDomain: "travel-log-and-planner.firebaseapp.com",
     projectId: "travel-log-and-planner",
     storageBucket: "travel-log-and-planner.appspot.com",
@@ -57,7 +57,7 @@ const App = () => {
     const onMouseEnter = useCallback(() => setCursor('pointer'), []);
     const onMouseLeave = useCallback(() => setCursor('auto'), []);
 
-    const [logEntries, setLogEntries] = useState([]);
+    const [logEntries, setLogEntries]  = useState([]);
     const [popupInfo, setPopupInfo] = useState({});
     const [addEntryLocation, setAddEntryLocation] = useState(null);
 
@@ -117,12 +117,12 @@ const App = () => {
 
     return (
         <div>
-            {!isAuthenticated ? (<AuthPage onSignIn={handleSignIn} />) : (
+            {!isAuthenticated ? (<AuthPage onSignIn={handleSignIn}/>) : (
                 <Map
                     {...viewState}
                     onMove={evt => setViewState(evt.viewState)}
                     mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
-                    style={{ width: '100vw', height: '100vh' }}
+                    style={{width: '100vw', height: '100vh'}}
                     mapStyle="mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"
                     attributionControl={false}
                     onContextMenu={showAddMarkerPopup}
@@ -130,12 +130,12 @@ const App = () => {
                     onMouseLeave={onMouseLeave}
                     cursor={cursor}
                 >
-                    <GeocoderControl mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN} position="top-left" />
-                    <AttributionControl customAttribution="Map design by LocalBinNotFound" position="bottom-right" />
-                    <GeolocateControl />
-                    <FullscreenControl />
-                    <NavigationControl />
-                    <ScaleControl />
+                    <GeocoderControl mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN} position="top-left"/>
+                    <AttributionControl customAttribution="Map design by LocalBinNotFound" position="bottom-right"/>
+                    <GeolocateControl/>
+                    <FullscreenControl/>
+                    <NavigationControl/>
+                    <ScaleControl/>
 
                     {Array.isArray(logEntries) && logEntries.map(entry => (
                         <React.Fragment key={entry._id}>
@@ -175,7 +175,7 @@ const App = () => {
                                                     <p className="card-text">Comments: {entry.comments}</p>}
 
                                                 {entry.image && <img src={entry.image} alt={entry.title}
-                                                    className="img-fluid my-2" />}
+                                                                     className="img-fluid my-2"/>}
                                                 <small className="text-muted">Visited
                                                     on: {new Date(entry.visitDate).toLocaleDateString()}</small>
                                                 <div className="button-container d-flex justify-content-between">
@@ -229,14 +229,14 @@ const App = () => {
                             </>
                         ) : null
                     }
-                    <button style={{ position: 'absolute', bottom: 60, right: 15 }}
-                        className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
-                        onClick={handleSignOut}>
+                    <button style={{position: 'absolute', bottom: 60, right: 15}}
+                            className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
+                            onClick={handleSignOut}>
                         Logout
                     </button>
                     <div>
                         <button
-                            style={{ position: 'absolute', bottom: 20, right: 15 }}
+                            style={{position: 'absolute', bottom: 20, right: 15}}
                             onClick={() => setShowConfirmModal(true)}
                             className="btn btn-sm btn-primary btn-danger text-uppercase fw-bold mb-2">
                             Wipe Data
