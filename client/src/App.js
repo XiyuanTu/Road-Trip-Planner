@@ -129,7 +129,7 @@ const App = () => {
                     onMouseLeave={onMouseLeave}
                     cursor={cursor}
                 >
-                    <GeocoderControl mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN} position="top-left" />
+                    <GeocoderControl mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN} position="top-left" getEntries={getEntries} />
                     <AttributionControl customAttribution="Map design by LocalBinNotFound" position="bottom-right" />
                     <GeolocateControl />
                     <FullscreenControl />

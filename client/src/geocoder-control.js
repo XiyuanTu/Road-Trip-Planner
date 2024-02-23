@@ -4,6 +4,7 @@ import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import { createPointOfInterest } from './API/pointOfInterestAPI';
 
 export default function GeocoderControl(props) {
+    const { getEntries } = props
     const [marker, setMarker] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
@@ -13,6 +14,8 @@ export default function GeocoderControl(props) {
         const longitude = marker.props.longitude
         const title = selectedLocation.text
         await createPointOfInterest({ title, latitude, longitude, description: "" })
+        getEntries()
+        setShowPopup(false);
     };
 
     const geocoder = useControl(() => {
