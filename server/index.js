@@ -31,9 +31,9 @@ app.get('/', (req, res) => {
   });
 });
 
-const logsRouter = require('./API/logs');
+const pointOfInterestsRouter = require('./API/pointOfInterests');
 
-app.use('/API/logs', logsRouter);
+app.use('/API/point-of-interests', pointOfInterestsRouter);
 
 const usersRouter = require('./API/users');
 

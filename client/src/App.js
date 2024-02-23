@@ -16,7 +16,7 @@ import Map, {
     AttributionControl
 } from 'react-map-gl';
 
-import { listLogEntries, deleteLogEntry } from "./API/logAPI";
+import { listPointOfInterests, deletePointOfInterest } from "./API/pointOfInterestAPI";
 import { deleteUser } from "./API/userAPI";
 import ConfirmationModal from './API/confirmation-modal';
 
@@ -63,7 +63,7 @@ const App = () => {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     const getEntries = async () => {
-        const logEntries = await listLogEntries();
+        const logEntries = await listPointOfInterests();
         setLogEntries(logEntries);
     }
 
@@ -180,7 +180,7 @@ const App = () => {
                                                 <div className="button-container d-flex justify-content-between">
                                                     <button className="btn btn-primary btn-sm">Update</button>
                                                     <button className="btn btn-danger btn-sm" onClick={async () => {
-                                                        const success = await deleteLogEntry(entry._id);
+                                                        const success = await deletePointOfInterest(entry._id);
                                                         if (success) {
                                                             getEntries();
                                                         }
