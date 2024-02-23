@@ -1,6 +1,6 @@
 const { Router } = require('express');
 
-const LogEntry = require('../models/LogEntry');
+const PointOfInterest = require('../models/PointOfInterest');
 const User = require('../models/User');
 
 const { isAuthenticated } = require('../middlewares');
@@ -9,7 +9,7 @@ const router = Router();
 
 router.get('/', isAuthenticated, async (req, res, next) => {
   try {
-    const entries = await LogEntry.find({ user: req.user.id });
+    const entries = await PointOfInterest.find({ user: req.user.id });
     res.json(entries);
   } catch (error) {
     next(error);
@@ -18,15 +18,16 @@ router.get('/', isAuthenticated, async (req, res, next) => {
 
 router.post('/', isAuthenticated, async (req, res, next) => {
   try {
-    const logEntry = new LogEntry({
-      ...req.body,
+    const { title, description, latitude, longitude } = req.body
+    const pointOfInterest = new PointOfInterest({
+      title, description, latitude, longitude,
       user: req.user.id,
     });
-    const createdEntry = await logEntry.save();
+    const createdEntry = await pointOfInterest.save();
 
-    const user = await User.findById(logEntry.user);
+    const user = await User.findById(pointOfInterest.user);
     if (user) {
-      user.logEntries.push(logEntry);
+      user.logEntries.push(pointOfInterest);
       await user.save();
     }
     res.json(createdEntry);
@@ -41,9 +42,9 @@ router.post('/', isAuthenticated, async (req, res, next) => {
 router.delete('/:entryId', isAuthenticated, async (req, res, next) => {
   try {
     const { entryId } = req.params;
-    const logEntry = await LogEntry.findById(entryId);
+    const pointOfInterest = await PointOfInterest.findById(entryId);
 
-    await LogEntry.findByIdAndDelete(entryId);
+    await pointOfInterest.findByIdAndDelete(entryId);
 
     const user = await User.findById(req.user.id);
     if (user) {
