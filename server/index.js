@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
 
 const pointOfInterestsRouter = require('./API/pointOfInterests');
 
-app.use('/API/point-of-interests', pointOfInterestsRouter);
+app.use('/API/pointOfInterests', pointOfInterestsRouter);
 
 const usersRouter = require('./API/users');
 

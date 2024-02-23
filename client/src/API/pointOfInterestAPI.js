@@ -5,7 +5,7 @@ export async function listPointOfInterests() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`
     };
-    const response = await fetch(`${API_URL}/api/point-of-interests`, { headers });
+    const response = await fetch(`${API_URL}/api/pointOfInterests`, { headers });
     return response.json();
 }
 
@@ -14,7 +14,7 @@ export async function deletePointOfInterest(entryId) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`
     };
-    const response = await fetch(`${API_URL}/api/point-of-interests/${entryId}`, {
+    const response = await fetch(`${API_URL}/api/pointOfInterests/${entryId}`, {
         method: 'DELETE',
         headers: headers
     });
@@ -27,7 +27,7 @@ export async function createPointOfInterest(entry) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`
     };
-    const response = await fetch(`${API_URL}/api/point-of-interests`, {
+    const response = await fetch(`${API_URL}/api/pointOfInterests`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(entry),
