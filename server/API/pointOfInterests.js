@@ -42,9 +42,7 @@ router.post('/', isAuthenticated, async (req, res, next) => {
 router.delete('/:entryId', isAuthenticated, async (req, res, next) => {
   try {
     const { entryId } = req.params;
-    const pointOfInterest = await PointOfInterest.findById(entryId);
-
-    await pointOfInterest.findByIdAndDelete(entryId);
+    await PointOfInterest.findByIdAndDelete(entryId);
 
     const user = await User.findById(req.user.id);
     if (user) {
