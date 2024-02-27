@@ -9,11 +9,21 @@ export default function GeocoderControl(props) {
     const [showPopup, setShowPopup] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
 
+    const [additionalInfo, setAdditionalInfo] = useState({
+        title: '',
+        place_type: '',
+        address: '',
+        id: '',
+        relevance: 0,
+        category: '',
+        landmark: false,
+        wikidata: '',
+    });
+
     const addToMyList = async () => {
         const latitude = marker.props.latitude
         const longitude = marker.props.longitude
-        const title = selectedLocation.text
-        await createPointOfInterest({ title, latitude, longitude, description: "" })
+        await createPointOfInterest({latitude, longitude, ...additionalInfo });
         setMarker(null);
         setShowPopup(false);
         getEntries();
@@ -31,9 +41,20 @@ export default function GeocoderControl(props) {
             props.onResult(evt);
 
             const { result } = evt;
-            const location =
-                result &&
-                (result.center || (result.geometry?.type === 'Point' && result.geometry.coordinates));
+            const location = result?.center || (result.geometry?.type === 'Point' && result.geometry.coordinates);
+            if (result) {
+                setAdditionalInfo({
+                    title: result.text,
+                    place_type: result.place_type[0],
+                    address: result.place_name,
+                    id: result.id,
+                    relevance: result.relevance,
+                    category: result.properties.category || '',
+                    landmark: result.properties.landmark || false,
+                    wikidata: result.properties.wikidata || '',
+                });
+            }
+
             if (location && props.marker) {
                 console.log(result);
                 setMarker(null);
@@ -112,6 +133,12 @@ export default function GeocoderControl(props) {
                     <div>
                         <h5>{selectedLocation.text}</h5>
                         <p>Address: {selectedLocation.place_name}</p>
+                        <p>Type: {selectedLocation.place_type[0]}</p>
+                        <p>ID: {selectedLocation.id}</p>
+                        <p>Relevance: {selectedLocation.relevance}</p>
+                        {selectedLocation.properties.category && <p>Category: {selectedLocation.properties.category}</p>}
+                        {selectedLocation.properties.landmark && <p>Landmark: YES</p>}
+                        {selectedLocation.properties.wikidata && <p>Wikidata: {selectedLocation.properties.wikidata}</p>}
                         <button className="btn btn-primary btn-sm" onClick={addToMyList}>Add to Destinations</button>
                     </div>
                 </Popup>

@@ -41,14 +41,14 @@ const App = () => {
     const onMouseEnter = useCallback(() => setCursor('pointer'), []);
     const onMouseLeave = useCallback(() => setCursor('auto'), []);
 
-    const [logEntries, setLogEntries] = useState([]);
+    const [locationEntries, setLocationEntries] = useState([]);
     const [popupInfo, setPopupInfo] = useState({});
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     const getEntries = async () => {
-        const logEntries = await listPointOfInterests();
-        setLogEntries(logEntries);
+        const pointEntries = await listPointOfInterests();
+        setLocationEntries(pointEntries);
     }
 
     useEffect(() => {
@@ -66,7 +66,7 @@ const App = () => {
 
     const handleSignOut = () => {
         localStorage.removeItem('token');
-        setLogEntries([]);
+        setLocationEntries([]);
         setIsAuthenticated(false);
         setShowConfirmModal(false);
     }
@@ -108,7 +108,7 @@ const App = () => {
                     <NavigationControl />
                     <ScaleControl />
 
-                    {Array.isArray(logEntries) && logEntries.map(entry => (
+                    {Array.isArray(locationEntries) && locationEntries.map(entry => (
                         <React.Fragment key={entry._id}>
                             <Marker
                                 longitude={entry.longitude}
@@ -140,15 +140,10 @@ const App = () => {
                                         <div className="popup card ">
                                             <div className="card-body">
                                                 <h5 className="card-title">{entry.title}</h5>
-                                                {entry.description &&
-                                                    <p className="card-text">Description: {entry.description}</p>}
-                                                {entry.comments &&
-                                                    <p className="card-text">Comments: {entry.comments}</p>}
-
-                                                {entry.image && <img src={entry.image} alt={entry.title}
-                                                    className="img-fluid my-2" />}
-                                                <small className="text-muted">Visited
-                                                    on: {new Date(entry.visitDate).toLocaleDateString()}</small>
+                                                {entry.address &&
+                                                    <p className="card-text">Address: {entry.address}</p>}
+                                                {entry.category &&
+                                                    <p className="card-text">Category: {entry.category}</p>}
                                                 <div className="button-container d-flex justify-content-between">
                                                     <button className="btn btn-primary btn-sm">Update</button>
                                                     <button className="btn btn-danger btn-sm" onClick={async () => {
