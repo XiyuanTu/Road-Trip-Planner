@@ -3,7 +3,7 @@ const { Router } = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const LogEntry = require('../models/LogEntry');
+const PointOfInterest = require('../models/PointOfInterest');
 
 const router = Router();
 
@@ -50,7 +50,7 @@ router.delete('/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    await LogEntry.deleteMany({ user: userId });
+    await PointOfInterest.deleteMany({ user: userId });
 
     const deletedUser = await User.findByIdAndDelete(userId);
     if (!deletedUser) {

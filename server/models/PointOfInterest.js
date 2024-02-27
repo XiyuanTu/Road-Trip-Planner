@@ -7,20 +7,12 @@ const requiredNumber = {
   required: true,
 };
 
-const logEntrySchema = new Schema({
+const pointOfInterestSchema = new Schema({
   title: {
     type: String,
     required: true,
   },
   description: String,
-  comments: String,
-  image: String,
-  rating: {
-    type: Number,
-    min: 0,
-    max: 10,
-    default: 0,
-  },
   latitude: {
     ...requiredNumber,
     min: -90,
@@ -31,10 +23,6 @@ const logEntrySchema = new Schema({
     min: -180,
     max: 180,
   },
-  visitDate: {
-    type: Date,
-    required: true,
-  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -44,6 +32,6 @@ const logEntrySchema = new Schema({
   timestamps: true,
 });
 
-const LogEntry = mongoose.model('LogEntry', logEntrySchema);
+const PointOfInterest = mongoose.model('PointOfInterest', pointOfInterestSchema);
 
-module.exports = LogEntry;
+module.exports = PointOfInterest;

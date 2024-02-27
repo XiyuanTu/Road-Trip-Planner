@@ -1,47 +1,54 @@
 import React, { useState } from 'react';
-import {useControl, Marker, Popup} from 'react-map-gl';
+import { useControl, Marker, Popup } from 'react-map-gl';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
+import { createPointOfInterest } from './API/pointOfInterestAPI';
 
 export default function GeocoderControl(props) {
+    const { getEntries } = props
     const [marker, setMarker] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
 
     const addToMyList = async () => {
-        //
+        const latitude = marker.props.latitude
+        const longitude = marker.props.longitude
+        const title = selectedLocation.text
+        await createPointOfInterest({ title, latitude, longitude, description: "" })
+        getEntries()
+        setShowPopup(false);
     };
 
     const geocoder = useControl(() => {
-            const ctrl = new MapboxGeocoder({
-                ...props,
-                marker: false,
-                accessToken: props.mapboxAccessToken
-            });
-            ctrl.on('loading', props.onLoading);
-            ctrl.on('results', props.onResults);
-            ctrl.on('result', evt => {
-                props.onResult(evt);
+        const ctrl = new MapboxGeocoder({
+            ...props,
+            marker: false,
+            accessToken: props.mapboxAccessToken
+        });
+        ctrl.on('loading', props.onLoading);
+        ctrl.on('results', props.onResults);
+        ctrl.on('result', evt => {
+            props.onResult(evt);
 
-                const { result } = evt;
-                const location =
-                    result &&
-                    (result.center || (result.geometry?.type === 'Point' && result.geometry.coordinates));
-                if (location && props.marker) {
-                    console.log(result);
-                    setMarker(<Marker
-                        {...props.marker}
-                        longitude={location[0]}
-                        latitude={location[1]}/>);
-                    setSelectedLocation(result);
-                    setShowPopup(true);
-                } else {
-                    setMarker(null);
-                    setShowPopup(false);
-                }
-            });
-            ctrl.on('error', props.onError);
-            return ctrl;
-        },
+            const { result } = evt;
+            const location =
+                result &&
+                (result.center || (result.geometry?.type === 'Point' && result.geometry.coordinates));
+            if (location && props.marker) {
+                console.log(result);
+                setMarker(<Marker
+                    {...props.marker}
+                    longitude={location[0]}
+                    latitude={location[1]} />);
+                setSelectedLocation(result);
+                setShowPopup(true);
+            } else {
+                setMarker(null);
+                setShowPopup(false);
+            }
+        });
+        ctrl.on('error', props.onError);
+        return ctrl;
+    },
         {
             position: props.position
         }
@@ -95,7 +102,8 @@ export default function GeocoderControl(props) {
                     anchor="top"
                     onClose={() => {
                         setShowPopup(false);
-                        setMarker(null);}}
+                        setMarker(null);
+                    }}
                 >
                     <div>
                         <h5>{selectedLocation.text}</h5>
