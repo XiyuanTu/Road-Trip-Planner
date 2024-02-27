@@ -50,7 +50,7 @@ Road Trip Planner is a full-stack web application designed to enhance your trave
 ### User
 - **username:** username
 - **hashPassword:** hashed password
-- **logEntries
+- **pointOfInterest:** array of POIs saved by user
 
 
 ## Getting Started
