@@ -124,22 +124,33 @@ export default function GeocoderControl(props) {
                 <Popup
                     longitude={selectedLocation.center[0]}
                     latitude={selectedLocation.center[1]}
+                    closeButton={true}
+                    closeOnClick={true}
+                    dynamicPosition={true}
+                    focusAfterOpen={true}
                     anchor="top"
+                    maxWidth="800px"
                     onClose={() => {
                         setShowPopup(false);
                         setMarker(null);
                     }}
                 >
-                    <div>
-                        <h5>{selectedLocation.text}</h5>
-                        <p>Address: {selectedLocation.place_name}</p>
-                        <p>Type: {selectedLocation.place_type[0]}</p>
-                        <p>ID: {selectedLocation.id}</p>
-                        <p>Relevance: {selectedLocation.relevance}</p>
-                        {selectedLocation.properties.category && <p>Category: {selectedLocation.properties.category}</p>}
-                        {selectedLocation.properties.landmark && <p>Landmark: YES</p>}
-                        {selectedLocation.properties.wikidata && <p>Wikidata: {selectedLocation.properties.wikidata}</p>}
-                        <button className="btn btn-primary btn-sm" onClick={addToMyList}>Add to Destinations</button>
+                    <div className="popup card">
+                        <div className="card-body">
+                            <h5 className="card-title">{selectedLocation.text}</h5>
+                            <p className="card-text">Address: {selectedLocation.place_name}</p>
+                            <p className="card-text">Type: {selectedLocation.place_type[0]}</p>
+                            <p className="card-text">ID: {selectedLocation.id}</p>
+                            <p className="card-text">Relevance: {selectedLocation.relevance}</p>
+                            {selectedLocation.properties.category &&
+                                <p className="card-text">Category: {selectedLocation.properties.category}</p>}
+                            {selectedLocation.properties.landmark && <p className="card-text">Landmark: YES</p>}
+                            {selectedLocation.properties.wikidata &&
+                                <p className="card-text">Wikidata: {selectedLocation.properties.wikidata}</p>}
+                            <div className="button-container d-flex justify-content-between">
+                                <button className="btn btn-primary btn-sm" onClick={addToMyList}>Add to Destinations</button>
+                            </div>
+                        </div>
                     </div>
                 </Popup>
             )}

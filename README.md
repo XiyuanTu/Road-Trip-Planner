@@ -34,8 +34,26 @@ Road Trip Planner is a full-stack web application designed to enhance your trave
 ### Deployment
 - **Firebase:** A Google platform for deployment of project.
 
-## Getting Started
+## Data Models
+### PointOfInterest
+- **title:** name of the place
+- **place_type:** place type, ***address*** or ***poi***
+- **address:** full address
+- **latitude:** latitude of place
+- **longitude:** longitude of place
+- **id:** ID of place, ***poi.###*** if poi, ***address.###*** if address
+- **relevance:** how relevant thd place is
+- **category:** what category this place belongs to
+- **landmark:** boolean, true if it is a landmark
+- **wikidata:** universal poi reference
 
+### User
+- **username:** username
+- **hashPassword:** hashed password
+- **logEntries
+
+
+## Getting Started
 ### Prerequisites
 - Node.js
 - npm or yarn

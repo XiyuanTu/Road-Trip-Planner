@@ -11,9 +11,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  logEntries: [{
+  pointOfInterests: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'LogEntry',
+    ref: 'PointOfInterest',
   }],
 });
 

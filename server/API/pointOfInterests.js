@@ -26,7 +26,7 @@ router.post('/', isAuthenticated, async (req, res, next) => {
 
     const user = await User.findById(pointOfInterest.user);
     if (user) {
-      user.logEntries.push(pointOfInterest);
+      user.pointOfInterests.push(pointOfInterest);
       await user.save();
     }
     res.json(createdEntry);
@@ -45,7 +45,7 @@ router.delete('/:entryId', isAuthenticated, async (req, res, next) => {
 
     const user = await User.findById(req.user.id);
     if (user) {
-      user.logEntries = user.logEntries.filter((entry) => entry.toString() !== entryId);
+      user.pointOfInterests = user.pointOfInterests.filter((entry) => entry.toString() !== entryId);
       await user.save();
     }
 
