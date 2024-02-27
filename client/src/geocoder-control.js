@@ -14,8 +14,9 @@ export default function GeocoderControl(props) {
         const longitude = marker.props.longitude
         const title = selectedLocation.text
         await createPointOfInterest({ title, latitude, longitude, description: "" })
-        getEntries()
+        setMarker(null);
         setShowPopup(false);
+        getEntries();
     };
 
     const geocoder = useControl(() => {
@@ -35,8 +36,11 @@ export default function GeocoderControl(props) {
                 (result.center || (result.geometry?.type === 'Point' && result.geometry.coordinates));
             if (location && props.marker) {
                 console.log(result);
+                setMarker(null);
                 setMarker(<Marker
                     {...props.marker}
+                    offset={[0, -40]}
+                    anchor="top"
                     longitude={location[0]}
                     latitude={location[1]} />);
                 setSelectedLocation(result);

@@ -26,21 +26,6 @@ import GeocoderControl from './geocoder-control';
 
 import { jwtDecode } from "jwt-decode";
 
-import { initializeApp } from "firebase/app";
-
-const firebaseConfig = {
-    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-    authDomain: "travel-log-and-planner.firebaseapp.com",
-    projectId: "travel-log-and-planner",
-    storageBucket: "travel-log-and-planner.appspot.com",
-    messagingSenderId: "913884825153",
-    appId: "1:913884825153:web:dad3ef0616385c2ae5a8c0",
-    measurementId: "G-173PCE5BBC"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
 const App = () => {
     const [viewState, setViewState] = React.useState({
         longitude: -100.6,
@@ -58,7 +43,6 @@ const App = () => {
 
     const [logEntries, setLogEntries] = useState([]);
     const [popupInfo, setPopupInfo] = useState({});
-    const [addEntryLocation, setAddEntryLocation] = useState(null);
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -74,17 +58,6 @@ const App = () => {
             getEntries();
         }
     }, [isAuthenticated]);
-
-    const showAddMarkerPopup = (event) => {
-        event.preventDefault();
-
-        const latitude = event.lngLat.lat;
-        const longitude = event.lngLat.lng;
-        setAddEntryLocation({
-            latitude,
-            longitude,
-        })
-    }
 
     const handleSignIn = (token) => {
         localStorage.setItem('token', token);
@@ -124,7 +97,6 @@ const App = () => {
                     style={{ width: '100vw', height: '100vh' }}
                     mapStyle="mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"
                     attributionControl={false}
-                    onContextMenu={showAddMarkerPopup}
                     onMouseEnter={onMouseEnter}
                     onMouseLeave={onMouseLeave}
                     cursor={cursor}
@@ -194,20 +166,7 @@ const App = () => {
                             }
                         </React.Fragment>
                     ))}
-                    {
-                        addEntryLocation ? (
-                            <>
-                                <Marker
-                                    longitude={addEntryLocation.longitude}
-                                    latitude={addEntryLocation.latitude}
-                                    offset={[0, -40]}
-                                    anchor="top"
-                                >
-                                </Marker>
 
-                            </>
-                        ) : null
-                    }
                     <button style={{ position: 'absolute', bottom: 60, right: 15 }}
                         className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
                         onClick={handleSignOut}>

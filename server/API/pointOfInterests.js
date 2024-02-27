@@ -18,9 +18,8 @@ router.get('/', isAuthenticated, async (req, res, next) => {
 
 router.post('/', isAuthenticated, async (req, res, next) => {
   try {
-    const { title, description, latitude, longitude } = req.body
     const pointOfInterest = new PointOfInterest({
-      title, description, latitude, longitude,
+      ...req.body,
       user: req.user.id,
     });
     const createdEntry = await pointOfInterest.save();
