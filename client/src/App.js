@@ -181,13 +181,13 @@ const App = () => {
                                 offset={[0, -40]}
                                 anchor="top"
                                 onClick={() => setPopupInfo({
-                                    ...popupInfo,
-                                    [entry._id]: true,
-                                })}
+                                            ...popupInfo,
+                                            [entry._id]: true,
+                                        })}
                             >
                             </Marker>
                             {
-                                popupInfo[entry._id] ? (
+                                popupInfo[entry._id] && !directionsEnabled ? (
                                     <Popup
                                         longitude={Number(entry.longitude)}
                                         latitude={Number(entry.latitude)}
