@@ -5,6 +5,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
+import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
 
 import Map, {
     Marker,
@@ -17,7 +18,6 @@ import Map, {
 } from 'react-map-gl';
 
 import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
-import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
 
 import { listPointOfInterests, deletePointOfInterest } from "./API/pointOfInterestAPI";
 import { deleteUser } from "./API/userAPI";
@@ -30,16 +30,16 @@ import GeocoderControl from './geocoder-control';
 import { jwtDecode } from "jwt-decode";
 
 const App = () => {
-    const mapRef = useRef(null);
-
     const [viewState, setViewState] = React.useState({
         longitude: -100.6,
         latitude: 37.6,
         zoom: 5,
     });
 
+    // auth state
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+    // cursor state
     const [cursor, setCursor] = useState('auto');
     const onMouseEnter = useCallback(() => setCursor('pointer'), []);
     const onMouseLeave = useCallback(() => setCursor('auto'), []);
@@ -49,13 +49,25 @@ const App = () => {
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+    // mapbox-gl-directions api state
     const [directionsEnabled, setDirectionsEnabled] = useState(false);
+    const mapRef = useRef(null);
+    const directionsRef = useRef(null);
+
+    if (!directionsRef.current) {
+        directionsRef.current = new MapboxDirections({
+            accessToken: process.env.REACT_APP_MAPBOX_TOKEN,
+            unit: 'metric',
+            profile: 'mapbox/driving',
+        });
+    }
 
     const getEntries = async () => {
         const pointEntries = await listPointOfInterests();
         setLocationEntries(pointEntries);
     }
 
+    // list location entries upon login
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
@@ -64,20 +76,22 @@ const App = () => {
         }
     }, [isAuthenticated]);
 
-
-    const onMapLoad = useCallback(() => {
+    // change mode based on toggle
+    useEffect(() => {
         if (mapRef.current) {
             const map = mapRef.current.getMap();
 
-            const directions = new MapboxDirections({
-                accessToken: process.env.REACT_APP_MAPBOX_TOKEN,
-                unit: 'metric',
-                profile: 'mapbox/driving',
-            });
-
-            map.addControl(directions, 'top-left');
+            if (directionsEnabled) {
+                if (!map.hasControl(directionsRef.current)) {
+                    map.addControl(directionsRef.current, 'top-left');
+                }
+            } else {
+                if (map.hasControl(directionsRef.current)) {
+                    map.removeControl(directionsRef.current);
+                }
+            }
         }
-    }, []);
+    }, [directionsEnabled]);
 
     const handleSignIn = (token) => {
         localStorage.setItem('token', token);
@@ -118,13 +132,15 @@ const App = () => {
                     style={{width: '100vw', height: '100vh'}}
                     mapStyle="mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"
                     attributionControl={false}
-                    onLoad={onMapLoad}
                     onMouseEnter={onMouseEnter}
                     onMouseLeave={onMouseLeave}
                     cursor={cursor}
                 >
-                    <GeocoderControl mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN} position="top-left"
-                                     getEntries={getEntries}/>
+                    {directionsEnabled ? null : <GeocoderControl
+                        mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
+                        position="top-left"
+                        getEntries={getEntries}/>}
+
                     <AttributionControl
                         customAttribution="Map design by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
                         position="bottom-right"/>
@@ -132,6 +148,30 @@ const App = () => {
                     <FullscreenControl/>
                     <NavigationControl/>
                     <ScaleControl/>
+
+                    <div style={{
+                        position: 'absolute',
+                        top: 190,
+                        right: 10,
+                        zIndex: 1,
+                        display: 'flex',
+                        alignItems: 'center'
+                    }}>
+                        <span style={{
+                            marginRight: '10px',
+                            fontSize: '18px',
+                            color: 'white',
+                            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                        }}>AI Route</span>
+                        <label className="switch">
+                            <input
+                                type="checkbox"
+                                checked={directionsEnabled}
+                                onChange={() => setDirectionsEnabled(!directionsEnabled)}
+                            />
+                            <span className="slider round"></span>
+                        </label>
+                    </div>
 
                     {Array.isArray(locationEntries) && locationEntries.map(entry => (
                         <React.Fragment key={entry._id}>
@@ -186,31 +226,6 @@ const App = () => {
                             }
                         </React.Fragment>
                     ))}
-
-                    <div style={{
-                        position: 'absolute',
-                        top: 20,
-                        right: '50%',
-                        zIndex: 1,
-                        display: 'flex',
-                        alignItems: 'center'
-                    }}>
-                        <span style={{
-                            marginRight: '10px',
-                            fontSize: '18px',
-                            color: 'white',
-                            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-                        }}>AI Route</span>
-                        <label className="switch">
-                            <input
-                                type="checkbox"
-                                checked={directionsEnabled}
-                                onChange={() => setDirectionsEnabled(!directionsEnabled)}
-                            />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-
 
                     <button style={{position: 'absolute', bottom: 60, right: 15}}
                             className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
