@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
@@ -16,6 +16,9 @@ import Map, {
     AttributionControl
 } from 'react-map-gl';
 
+import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
+import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
+
 import { listPointOfInterests, deletePointOfInterest } from "./API/pointOfInterestAPI";
 import { deleteUser } from "./API/userAPI";
 import ConfirmationModal from './API/confirmation-modal';
@@ -27,12 +30,12 @@ import GeocoderControl from './geocoder-control';
 import { jwtDecode } from "jwt-decode";
 
 const App = () => {
+    const mapRef = useRef(null);
+
     const [viewState, setViewState] = React.useState({
         longitude: -100.6,
         latitude: 37.6,
         zoom: 5,
-        bearing: 0,
-        pitch: 0
     });
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -46,6 +49,8 @@ const App = () => {
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+    const [directionsEnabled, setDirectionsEnabled] = useState(false);
+
     const getEntries = async () => {
         const pointEntries = await listPointOfInterests();
         setLocationEntries(pointEntries);
@@ -58,6 +63,21 @@ const App = () => {
             getEntries();
         }
     }, [isAuthenticated]);
+
+
+    const onMapLoad = useCallback(() => {
+        if (mapRef.current) {
+            const map = mapRef.current.getMap();
+
+            const directions = new MapboxDirections({
+                accessToken: process.env.REACT_APP_MAPBOX_TOKEN,
+                unit: 'metric',
+                profile: 'mapbox/driving',
+            });
+
+            map.addControl(directions, 'top-left');
+        }
+    }, []);
 
     const handleSignIn = (token) => {
         localStorage.setItem('token', token);
@@ -91,22 +111,27 @@ const App = () => {
         <div>
             {!isAuthenticated ? (<AuthPage onSignIn={handleSignIn} />) : (
                 <Map
+                    ref={mapRef}
                     {...viewState}
                     onMove={evt => setViewState(evt.viewState)}
                     mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
-                    style={{ width: '100vw', height: '100vh' }}
+                    style={{width: '100vw', height: '100vh'}}
                     mapStyle="mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"
                     attributionControl={false}
+                    onLoad={onMapLoad}
                     onMouseEnter={onMouseEnter}
                     onMouseLeave={onMouseLeave}
                     cursor={cursor}
                 >
-                    <GeocoderControl mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN} position="top-left" getEntries={getEntries} />
-                    <AttributionControl customAttribution="Map design by LocalBinNotFound" position="bottom-right" />
-                    <GeolocateControl />
-                    <FullscreenControl />
-                    <NavigationControl />
-                    <ScaleControl />
+                    <GeocoderControl mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN} position="top-left"
+                                     getEntries={getEntries}/>
+                    <AttributionControl
+                        customAttribution="Map design by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
+                        position="bottom-right"/>
+                    <GeolocateControl/>
+                    <FullscreenControl/>
+                    <NavigationControl/>
+                    <ScaleControl/>
 
                     {Array.isArray(locationEntries) && locationEntries.map(entry => (
                         <React.Fragment key={entry._id}>
@@ -162,14 +187,39 @@ const App = () => {
                         </React.Fragment>
                     ))}
 
-                    <button style={{ position: 'absolute', bottom: 60, right: 15 }}
-                        className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
-                        onClick={handleSignOut}>
+                    <div style={{
+                        position: 'absolute',
+                        top: 20,
+                        right: '50%',
+                        zIndex: 1,
+                        display: 'flex',
+                        alignItems: 'center'
+                    }}>
+                        <span style={{
+                            marginRight: '10px',
+                            fontSize: '18px',
+                            color: 'white',
+                            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                        }}>AI Route</span>
+                        <label className="switch">
+                            <input
+                                type="checkbox"
+                                checked={directionsEnabled}
+                                onChange={() => setDirectionsEnabled(!directionsEnabled)}
+                            />
+                            <span className="slider round"></span>
+                        </label>
+                    </div>
+
+
+                    <button style={{position: 'absolute', bottom: 60, right: 15}}
+                            className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
+                            onClick={handleSignOut}>
                         Logout
                     </button>
                     <div>
                         <button
-                            style={{ position: 'absolute', bottom: 20, right: 15 }}
+                            style={{position: 'absolute', bottom: 20, right: 15}}
                             onClick={() => setShowConfirmModal(true)}
                             className="btn btn-sm btn-primary btn-danger text-uppercase fw-bold mb-2">
                             Wipe Data
