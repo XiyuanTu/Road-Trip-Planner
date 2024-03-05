@@ -86,10 +86,12 @@ const App = () => {
             if (directionsEnabled) {
                 if (!map.hasControl(directionsRef.current)) {
                     map.addControl(directionsRef.current, 'top-left');
+                    resetDirections();
                 }
             } else {
                 if (map.hasControl(directionsRef.current)) {
                     map.removeControl(directionsRef.current);
+                    resetDirections();
                 }
             }
         }
@@ -123,6 +125,13 @@ const App = () => {
         }
     };
 
+    const resetDirections = () => {
+        if (directionsRef.current) {
+            directionsRef.current.removeRoutes();
+        }
+        setPickOrigin(true);
+    };
+
     return (
         <div>
             {!isAuthenticated ? (<AuthPage onSignIn={handleSignIn} />) : (
@@ -131,26 +140,37 @@ const App = () => {
                     {...viewState}
                     onMove={evt => setViewState(evt.viewState)}
                     mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
-                    style={{ width: '100vw', height: '100vh' }}
+                    style={{width: '100vw', height: '100vh'}}
                     mapStyle="mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"
                     attributionControl={false}
                     onMouseEnter={onMouseEnter}
                     onMouseLeave={onMouseLeave}
                     cursor={cursor}
                 >
-                    {directionsEnabled ? null : <GeocoderControl
-                        mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
-                        directionsEnabled={directionsEnabled}
-                        position="top-left"
-                        getEntries={getEntries} />}
+                    {directionsEnabled ? null :
+                            <GeocoderControl
+                                mapboxAccessToken={ process.env.REACT_APP_MAPBOX_TOKEN }
+                                directionsEnabled={ directionsEnabled }
+                                position="top-left"
+                                getEntries={ getEntries }/>}
+
+                    {!directionsEnabled ? null :
+                            <button onClick={ resetDirections } className="clear-origin-btn btn btn-light btn-sm" style={{
+                                position: 'absolute',
+                                top: 15,
+                                left: 320,
+                                zIndex: 1,
+                                marginLeft: '10px',
+                            } }>Clear
+                            </button>}
 
                     <AttributionControl
                         customAttribution="Map design by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
-                        position="bottom-right" />
-                    <GeolocateControl />
-                    <FullscreenControl />
-                    <NavigationControl />
-                    <ScaleControl />
+                        position="bottom-right"/>
+                    <GeolocateControl/>
+                    <FullscreenControl/>
+                    <NavigationControl/>
+                    <ScaleControl/>
 
                     <div style={{
                         position: 'absolute',
@@ -242,14 +262,14 @@ const App = () => {
                         </React.Fragment>
                     ))}
 
-                    <button style={{ position: 'absolute', bottom: 60, right: 15 }}
-                        className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
-                        onClick={handleSignOut}>
+                    <button style={{position: 'absolute', bottom: 60, right: 15}}
+                            className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
+                            onClick={handleSignOut}>
                         Logout
                     </button>
                     <div>
                         <button
-                            style={{ position: 'absolute', bottom: 20, right: 15 }}
+                            style={{position: 'absolute', bottom: 20, right: 15}}
                             onClick={() => setShowConfirmModal(true)}
                             className="btn btn-sm btn-primary btn-danger text-uppercase fw-bold mb-2">
                             Wipe Data
