@@ -39,6 +39,9 @@ const App = () => {
     // auth state
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+    // sidebar state
+    const [showSidebar, setShowSidebar] = useState(false);
+
     // cursor state
     const [cursor, setCursor] = useState('auto');
     const onMouseEnter = useCallback(() => setCursor('pointer'), []);
@@ -53,8 +56,44 @@ const App = () => {
     const [directionsEnabled, setDirectionsEnabled] = useState(false);
     const mapRef = useRef(null);
     const directionsRef = useRef(null);
-    const [pickOrigin, setPickOrigin] = useState(true)
+    const [pickOrigin, setPickOrigin] = useState(true);
+    const [origin, setOrigin] = useState(null);
+    const [destination, setDestination] = useState(null);
+    const [waypoints, setWaypoints] = useState(null);
 
+    // handle user logic
+    const handleSignIn = (token) => {
+        localStorage.setItem('token', token);
+        setIsAuthenticated(true);
+    };
+
+    const handleSignOut = () => {
+        localStorage.removeItem('token');
+        setLocationEntries([]);
+        setIsAuthenticated(false);
+        setShowConfirmModal(false);
+        setShowSidebar(false);
+        setDirectionsEnabled(false);
+        resetDirections();
+    }
+
+    const handleDeleteAccount = async () => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decoded = jwtDecode(token);
+            const userId = decoded.id;
+            try {
+                const success = await deleteUser(userId);
+                if (success) {
+                    handleSignOut();
+                }
+            } catch (error) {
+                console.error("Error deleting account:", error.message);
+            }
+        }
+    };
+
+    // add MapboxDirections control
     if (!directionsRef.current) {
         directionsRef.current = new MapboxDirections({
             accessToken: process.env.REACT_APP_MAPBOX_TOKEN,
@@ -68,6 +107,16 @@ const App = () => {
         const pointEntries = await listPointOfInterests();
         setLocationEntries(pointEntries);
     }
+
+    const resetDirections = () => {
+        if (directionsRef.current) {
+            directionsRef.current.removeRoutes();
+        }
+        setPickOrigin(true);
+        setOrigin(null);
+        setDestination(null);
+        setWaypoints(null);
+    };
 
     // list location entries upon login
     useEffect(() => {
@@ -97,40 +146,9 @@ const App = () => {
         }
     }, [directionsEnabled]);
 
-    const handleSignIn = (token) => {
-        localStorage.setItem('token', token);
-        setIsAuthenticated(true);
-    };
-
-    const handleSignOut = () => {
-        localStorage.removeItem('token');
-        setLocationEntries([]);
-        setIsAuthenticated(false);
-        setShowConfirmModal(false);
-    }
-
-    const handleDeleteAccount = async () => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            const decoded = jwtDecode(token);
-            const userId = decoded.id;
-            try {
-                const success = await deleteUser(userId);
-                if (success) {
-                    handleSignOut();
-                }
-            } catch (error) {
-                console.error("Error deleting account:", error.message);
-            }
-        }
-    };
-
-    const resetDirections = () => {
-        if (directionsRef.current) {
-            directionsRef.current.removeRoutes();
-        }
-        setPickOrigin(true);
-    };
+    useEffect(() => {
+        setShowSidebar(directionsEnabled);
+    }, [directionsEnabled]);
 
     return (
         <div>
@@ -140,7 +158,11 @@ const App = () => {
                     {...viewState}
                     onMove={evt => setViewState(evt.viewState)}
                     mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
-                    style={{width: '100vw', height: '100vh'}}
+                    style={{
+                        width: showSidebar ? 'calc(100vw - 300px)' : '100vw',
+                        height: '100vh',
+                        position: 'absolute',
+                        left: showSidebar ? '300px' : '0px',}}
                     mapStyle="mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"
                     attributionControl={false}
                     onMouseEnter={onMouseEnter}
@@ -154,16 +176,6 @@ const App = () => {
                                 position="top-left"
                                 getEntries={ getEntries }/>}
 
-                    {!directionsEnabled ? null :
-                            <button onClick={ resetDirections } className="clear-origin-btn btn btn-light btn-sm" style={{
-                                position: 'absolute',
-                                top: 15,
-                                left: 320,
-                                zIndex: 1,
-                                marginLeft: '10px',
-                            } }>Clear
-                            </button>}
-
                     <AttributionControl
                         customAttribution="Map design by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
                         position="bottom-right"/>
@@ -174,8 +186,8 @@ const App = () => {
 
                     <div style={{
                         position: 'absolute',
-                        top: 190,
-                        right: 10,
+                        top: showSidebar ? 150 : 70,
+                        left: 10,
                         zIndex: 1,
                         display: 'flex',
                         alignItems: 'center'
@@ -185,7 +197,7 @@ const App = () => {
                             fontSize: '18px',
                             color: 'white',
                             textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-                        }}>AI Route</span>
+                        }}>Plan Your Trip!</span>
                         <label className="switch">
                             <input
                                 type="checkbox"
@@ -207,8 +219,10 @@ const App = () => {
                                     if (directionsEnabled) {
                                         if (!pickOrigin) {
                                             directionsRef.current = directionsRef.current.setDestination(entry.address);
+                                            setDestination({ name: entry.title, coordinates: [entry.longitude, entry.latitude] });
                                         } else {
                                             directionsRef.current = directionsRef.current.setOrigin(entry.address);
+                                            setOrigin({name: entry.title, coordinates: [entry.longitude, entry.latitude]});
                                             setPickOrigin(false);
                                         }
                                     } else {
@@ -283,6 +297,47 @@ const App = () => {
                     </div>
                 </Map>
             )}
+
+            {showSidebar && (
+                <div className="p-3" style={ {
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '300px',
+                    height: '100%',
+                    overflowY: 'auto',
+                    background: '#f9f9f9'
+                } }>
+                    <h2 className="text-center mb-4">AI Trip Planner</h2>
+                    <div className="button-container mb-4">
+                    <button onClick={ resetDirections } className="clear-origin-btn btn btn-primary btn-sm">Clear Selection
+                    </button>
+                    </div>
+                    <div className="card mb-3">
+                        <div className="card-header">Origin</div>
+                        <div className="card-body">
+                            { origin ? <p className="text-success">{ origin.name }</p> :
+                                <p className="text-danger">NOT SELECTED</p> }
+                        </div>
+                    </div>
+                    <div className="card mb-3">
+                        <div className="card-header">Waypoints</div>
+                        <div className="card-body">
+                            { waypoints && waypoints.length > 0 ? waypoints.map((wp, index) => (
+                                <p key={ index } className="list-group-item">{ wp.name }</p>
+                            )) : <p className="list-group-item text-danger">NOT SELECTED</p> }
+                        </div>
+                    </div>
+                    <div className="card mb-4">
+                        <div className="card-header">Destination</div>
+                        <div className="card-body">
+                            { destination ? <p className="text-success">{ destination.name }</p> :
+                                <p className="text-danger">NOT SELECTED</p> }
+                        </div>
+                    </div>
+                    <button className="btn btn-info w-100">Confirm Route</button>
+                </div>
+            ) }
         </div>
     );
 };
