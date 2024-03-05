@@ -14,7 +14,7 @@ const pointOfInterestSchema = new Schema({
   place_type: {
     type: String,
     required: true,
-    enum: ['address', 'poi'],
+    // enum: ['address', 'poi'],
   },
   address: String,
   latitude: {

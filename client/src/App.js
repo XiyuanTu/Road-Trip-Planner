@@ -53,12 +53,14 @@ const App = () => {
     const [directionsEnabled, setDirectionsEnabled] = useState(false);
     const mapRef = useRef(null);
     const directionsRef = useRef(null);
+    const [pickOrigin, setPickOrigin] = useState(true)
 
     if (!directionsRef.current) {
         directionsRef.current = new MapboxDirections({
             accessToken: process.env.REACT_APP_MAPBOX_TOKEN,
             unit: 'metric',
             profile: 'mapbox/driving',
+            interactive: false //disable the default point picking behavior. Need to refresh to see the change
         });
     }
 
@@ -129,7 +131,7 @@ const App = () => {
                     {...viewState}
                     onMove={evt => setViewState(evt.viewState)}
                     mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
-                    style={{width: '100vw', height: '100vh'}}
+                    style={{ width: '100vw', height: '100vh' }}
                     mapStyle="mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"
                     attributionControl={false}
                     onMouseEnter={onMouseEnter}
@@ -138,16 +140,17 @@ const App = () => {
                 >
                     {directionsEnabled ? null : <GeocoderControl
                         mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
+                        directionsEnabled={directionsEnabled}
                         position="top-left"
-                        getEntries={getEntries}/>}
+                        getEntries={getEntries} />}
 
                     <AttributionControl
                         customAttribution="Map design by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
-                        position="bottom-right"/>
-                    <GeolocateControl/>
-                    <FullscreenControl/>
-                    <NavigationControl/>
-                    <ScaleControl/>
+                        position="bottom-right" />
+                    <GeolocateControl />
+                    <FullscreenControl />
+                    <NavigationControl />
+                    <ScaleControl />
 
                     <div style={{
                         position: 'absolute',
@@ -180,10 +183,22 @@ const App = () => {
                                 latitude={entry.latitude}
                                 offset={[0, -40]}
                                 anchor="top"
-                                onClick={() => setPopupInfo({
+                                onClick={() => {
+                                    if (directionsEnabled) {
+                                        if (!pickOrigin) {
+                                            directionsRef.current = directionsRef.current.setDestination(entry.address);
+                                        } else {
+                                            directionsRef.current = directionsRef.current.setOrigin(entry.address);
+                                            setPickOrigin(false);
+                                        }
+                                    } else {
+                                        setPopupInfo({
                                             ...popupInfo,
                                             [entry._id]: true,
-                                        })}
+                                        })
+                                    }
+                                }
+                                }
                             >
                             </Marker>
                             {
@@ -227,14 +242,14 @@ const App = () => {
                         </React.Fragment>
                     ))}
 
-                    <button style={{position: 'absolute', bottom: 60, right: 15}}
-                            className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
-                            onClick={handleSignOut}>
+                    <button style={{ position: 'absolute', bottom: 60, right: 15 }}
+                        className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
+                        onClick={handleSignOut}>
                         Logout
                     </button>
                     <div>
                         <button
-                            style={{position: 'absolute', bottom: 20, right: 15}}
+                            style={{ position: 'absolute', bottom: 20, right: 15 }}
                             onClick={() => setShowConfirmModal(true)}
                             className="btn btn-sm btn-primary btn-danger text-uppercase fw-bold mb-2">
                             Wipe Data
