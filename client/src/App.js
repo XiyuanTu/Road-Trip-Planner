@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
@@ -7,32 +7,24 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
 
 import Map, {
-    Marker,
-    Popup,
-    NavigationControl,
-    FullscreenControl,
-    ScaleControl,
-    GeolocateControl,
-    AttributionControl
+    Marker, Popup, NavigationControl, FullscreenControl, ScaleControl, GeolocateControl, AttributionControl
 } from 'react-map-gl';
 
 import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
 
-import { listPointOfInterests, deletePointOfInterest } from "./API/pointOfInterestAPI";
-import { deleteUser } from "./API/userAPI";
+import {listPointOfInterests, deletePointOfInterest} from "./API/pointOfInterestAPI";
+import {deleteUser} from "./API/userAPI";
 import ConfirmationModal from './API/confirmation-modal';
 
 import AuthPage from './forms/auth-page';
 
 import GeocoderControl from './geocoder-control';
 
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 
 const App = () => {
     const [viewState, setViewState] = React.useState({
-        longitude: -100.6,
-        latitude: 37.6,
-        zoom: 5,
+        longitude : -100.6, latitude : 37.6, zoom : 5,
     });
 
     // auth state
@@ -58,6 +50,9 @@ const App = () => {
     const [origin, setOrigin] = useState(null);
     const [destination, setDestination] = useState(null);
     const [waypoints, setWaypoints] = useState([]);
+
+    // track marker selection state
+    const [selectedMarkers, setSelectedMarkers] = useState([]);
 
     // handle user logic
     const handleSignIn = (token) => {
@@ -94,13 +89,12 @@ const App = () => {
     // add MapboxDirections control
     if (!directionsRef.current) {
         directionsRef.current = new MapboxDirections({
-            accessToken: process.env.REACT_APP_MAPBOX_TOKEN,
-            unit: 'metric',
-            profile: 'mapbox/driving',
-            interactive: false,
-            congestion: true,
-            placeholderOrigin: "Your starting point",
-            placeholderDestination: "Your destination"
+            accessToken : process.env.REACT_APP_MAPBOX_TOKEN,
+            unit : 'metric',
+            profile : 'mapbox/driving',
+            interactive : false,
+            congestion : true,
+            controls : {inputs : false},
         });
     }
 
@@ -117,6 +111,7 @@ const App = () => {
         setOrigin(null);
         setDestination(null);
         setWaypoints([]);
+        setSelectedMarkers([]);
     };
 
     // list location entries upon login
@@ -142,28 +137,27 @@ const App = () => {
                 if (map.hasControl(directionsRef.current)) {
                     map.removeControl(directionsRef.current);
                     resetAllLocations();
+                    setSelectedMarkers([]);
                 }
             }
         }
     }, [directionsEnabled]);
 
+    // sidebar toggle
     useEffect(() => {
         setShowSidebar(directionsEnabled);
     }, [directionsEnabled]);
 
+    // recalculate route with updates
     useEffect(() => {
-        if (!directionsRef.current) return;
-
+        if (!directionsRef.current || !origin) return;
         directionsRef.current.removeRoutes();
-
         if (origin) {
             directionsRef.current.setOrigin(origin.coordinates);
         }
-
         if (destination) {
             directionsRef.current.setDestination(destination.coordinates);
         }
-
         waypoints.forEach((wp, index) => {
             if (wp && wp.coordinates) {
                 directionsRef.current.addWaypoint(index, wp.coordinates);
@@ -171,218 +165,244 @@ const App = () => {
         });
     }, [destination, origin, waypoints]);
 
-
     const removeWaypoint = (indexToRemove) => {
-        const filteredWaypoints = waypoints.filter((_, index) => index !== indexToRemove);
-        setWaypoints(filteredWaypoints);
-    };
+        const waypointToRemove = waypoints[indexToRemove];
+        if (waypointToRemove) {
+            setSelectedMarkers(selectedMarkers.filter(id => id !== waypointToRemove._id));
+            setWaypoints(waypoints.filter((_, index) => index !== indexToRemove));
+        }
+    }
 
-    return (
-        <div>
-            {!isAuthenticated ? (<AuthPage onSignIn={handleSignIn} />) : (
-                <Map
-                    ref={mapRef}
-                    {...viewState}
-                    onMove={evt => setViewState(evt.viewState)}
-                    mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
-                    style={{
-                        width: showSidebar ? 'calc(100vw - 300px)' : '100vw',
-                        height: '100vh',
-                        position: 'absolute',
-                        left: showSidebar ? '300px' : '0px',}}
-                    mapStyle="mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"
-                    attributionControl={false}
-                    onMouseEnter={onMouseEnter}
-                    onMouseLeave={onMouseLeave}
-                    cursor={cursor}
-                >
-                    {directionsEnabled ? null :
-                            <GeocoderControl
-                                mapboxAccessToken={ process.env.REACT_APP_MAPBOX_TOKEN }
-                                directionsEnabled={ directionsEnabled }
-                                position="top-left"
-                                getEntries={ getEntries }/>}
+    const removeOrigin = () => {
+        if (origin) {
+            setSelectedMarkers(selectedMarkers.filter(id => id !== origin._id));
+            setOrigin(null);
+            if (directionsRef.current) {
+                directionsRef.current.removeRoutes();
+            }
+        }
+    }
 
-                    <AttributionControl
-                        customAttribution="Map design by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
-                        position="bottom-right"/>
-                    <GeolocateControl/>
-                    <FullscreenControl/>
-                    <NavigationControl/>
-                    <ScaleControl/>
+    const removeDestination = () => {
+        if (destination) {
+            setSelectedMarkers(selectedMarkers.filter(id => id !== destination._id));
+            setDestination(null);
+            if (directionsRef.current) {
+                directionsRef.current.removeRoutes();
+            }
+        }
+    }
 
-                    <div style={{
-                        position: 'absolute',
-                        top: 20,
-                        left: "50%",
-                        zIndex: 1,
-                        display: 'flex',
-                        alignItems: 'center'
-                    }}>
-                        <span style={{
-                            marginRight: '10px',
-                            fontSize: '18px',
-                            color: 'white',
-                            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-                        }}>AI Driving Plan</span>
-                        <label className="switch">
-                            <input
-                                type="checkbox"
-                                checked={directionsEnabled}
-                                onChange={() => setDirectionsEnabled(!directionsEnabled)}
-                            />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
+    return (<div>
+        { !isAuthenticated ? (<AuthPage onSignIn={ handleSignIn }/>) : (<Map
+            ref={ mapRef }
+            { ...viewState }
+            onMove={ evt => setViewState(evt.viewState) }
+            mapboxAccessToken={ process.env.REACT_APP_MAPBOX_TOKEN }
+            style={ {
+                width : showSidebar ? 'calc(100vw - 350px)' : '100vw',
+                height : '100vh',
+                position : 'absolute',
+                left : showSidebar ? '350px' : '0px',
+            } }
+            mapStyle="mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"
+            attributionControl={ false }
+            onMouseEnter={ onMouseEnter }
+            onMouseLeave={ onMouseLeave }
+            cursor={ cursor }
+        >
+            { directionsEnabled ? null : <GeocoderControl
+                mapboxAccessToken={ process.env.REACT_APP_MAPBOX_TOKEN }
+                directionsEnabled={ directionsEnabled }
+                position="top-left"
+                getEntries={ getEntries }/> }
 
-                    {Array.isArray(locationEntries) && locationEntries.map(entry => (
-                        <React.Fragment key={entry._id}>
-                            <Marker
-                                longitude={entry.longitude}
-                                latitude={entry.latitude}
-                                offset={[0, -40]}
-                                anchor="top"
-                                onClick={() => {
-                                    if (!directionsEnabled) {
-                                        setPopupInfo({
-                                            ...popupInfo,
-                                            [entry._id]: true,
-                                        });
-                                        return;
-                                    }
+            <AttributionControl
+                customAttribution="Map design by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
+                position="bottom-right"/>
+            <GeolocateControl/>
+            <FullscreenControl/>
+            <NavigationControl/>
+            <ScaleControl/>
 
-                                    const point = {
-                                        name: entry.title,
-                                        coordinates: [entry.longitude, entry.latitude],
-                                        address: entry.address
-                                    };
+            <div style={ {
+                position : 'absolute',
+                top : 20,
+                left : '50%',
+                transform : 'translateX(-50%)',
+                zIndex : 1,
+                display : 'flex',
+                alignItems : 'center',
+                backgroundColor : 'rgba(255, 255, 255, 0.8)',
+                padding : '10px 20px',
+                borderRadius : '20px',
+                boxShadow : '0 2px 4px rgba(0,0,0,0.3)',
+            } }>
+              <span style={ {
+                  marginRight : '10px', fontSize : '18px', color : '#333', textShadow : '1px 1px 2px rgba(0,0,0,0.1)',
+              } }>AI Trip Planner</span>
+                <label className="switch">
+                    <input
+                        type="checkbox"
+                        checked={ directionsEnabled }
+                        onChange={ () => setDirectionsEnabled(!directionsEnabled) }
+                    />
+                    <span className="slider round"></span>
+                </label>
+            </div>
 
-                                    if (!origin) {
-                                        directionsRef.current.setOrigin(entry.address);
-                                        setOrigin(point);
-                                    } else if (!destination) {
-                                        directionsRef.current.setDestination(entry.address);
-                                        setDestination(point);
-                                    } else {
-                                        const updatedWaypoints = [...waypoints, point];
-                                        setWaypoints(updatedWaypoints);
-                                    }
-                                }}
 
-                            >
-                            </Marker>
-                            {
-                                popupInfo[entry._id] && !directionsEnabled ? (
-                                    <Popup
-                                        longitude={Number(entry.longitude)}
-                                        latitude={Number(entry.latitude)}
-                                        closeButton={true}
-                                        closeOnClick={true}
-                                        dynamicPosition={true}
-                                        focusAfterOpen={true}
-                                        onClose={() => setPopupInfo({
-                                            ...popupInfo,
-                                            [entry._id]: false,
-                                        })}
-                                        anchor="top"
-                                        maxWidth="800px"
-                                    >
-                                        <div className="popup card ">
-                                            <div className="card-body">
-                                                <h5 className="card-title">{entry.title}</h5>
-                                                {entry.address &&
-                                                    <p className="card-text">Address: {entry.address}</p>}
-                                                {entry.category &&
-                                                    <p className="card-text">Category: {entry.category}</p>}
-                                                <div className="button-container d-flex justify-content-between">
-                                                    <button className="btn btn-primary btn-sm">Update</button>
-                                                    <button className="btn btn-danger btn-sm" onClick={async () => {
-                                                        const success = await deletePointOfInterest(entry._id);
-                                                        if (success) {
-                                                            await getEntries();
-                                                        }
-                                                    }}>Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Popup>
-                                ) : null
+            { Array.isArray(locationEntries) && locationEntries.map(entry => (!selectedMarkers.includes(entry._id) && (
+                <React.Fragment key={ entry._id }>
+                    <Marker
+                        longitude={ entry.longitude }
+                        latitude={ entry.latitude }
+                        offset={ [0, -40] }
+                        anchor="top"
+                        onClick={ () => {
+                            if (!directionsEnabled) {
+                                setPopupInfo({
+                                    ...popupInfo, [entry._id] : true,
+                                });
+                                return;
                             }
-                        </React.Fragment>
-                    ))}
 
-                    <button style={{position: 'absolute', bottom: 60, right: 15}}
-                            className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
-                            onClick={handleSignOut}>
-                        Logout
-                    </button>
-                    <div>
-                        <button
-                            style={{position: 'absolute', bottom: 20, right: 15}}
-                            onClick={() => setShowConfirmModal(true)}
-                            className="btn btn-sm btn-primary btn-danger text-uppercase fw-bold mb-2">
-                            Wipe Data
-                        </button>
-                        <ConfirmationModal
-                            show={showConfirmModal}
-                            handleClose={() => setShowConfirmModal(false)}
-                            handleConfirm={handleDeleteAccount}
-                            message="Are you sure you want to delete your account and all related data? This action cannot be undone."
-                        />
-                    </div>
-                </Map>
-            )}
+                            const point = {
+                                _id : entry._id,
+                                name : entry.title,
+                                coordinates : [entry.longitude, entry.latitude],
+                                address : entry.address
+                            };
 
-            {showSidebar && (
-                <div className="p-3" style={ {
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '300px',
-                    height: '100%',
-                    overflowY: 'auto',
-                    background: '#f9f9f9'
-                } }>
-                    <h2 className="text-center mb-4">AI Trip Planner</h2>
-                    <div className="button-container mb-4">
-                        <button onClick={ resetAllLocations } className="clear-origin-btn btn btn-primary btn-sm">Clear
-                            Selection
-                        </button>
-                    </div>
-                    <div className="card mb-3">
-                        <div className="card-header">Origin</div>
-                        <div className="card-body">
-                            { origin ? <p className="text-success">{ origin.name }</p> :
-                                <p className="text-danger">NOT SELECTED</p> }
-                        </div>
-                    </div>
-                    <div className="card mb-3">
-                        <div className="card-header">Waypoints</div>
-                        <div className="card-body">
-                            { waypoints && waypoints.length > 0 ? waypoints.map((wp, index) => (
-                                <div key={ index } className="list-group-item">
-                                    { wp.name }
-                                    <button className="btn btn-sm btn-danger"
-                                            onClick={ () => removeWaypoint(index) }>Remove
+                            if (!origin) {
+                                setOrigin(point);
+                                setSelectedMarkers([...selectedMarkers, entry._id]);
+                            } else
+                                if (!destination) {
+                                    setDestination(point);
+                                    setSelectedMarkers([...selectedMarkers, entry._id]);
+                                } else {
+                                    setWaypoints([...waypoints, point]);
+                                    setSelectedMarkers([...selectedMarkers, entry._id]);
+                                }
+                        } }
+
+                    >
+                    </Marker>
+                    { popupInfo[entry._id] && !directionsEnabled ? (<Popup
+                        longitude={ Number(entry.longitude) }
+                        latitude={ Number(entry.latitude) }
+                        closeButton={ true }
+                        closeOnClick={ true }
+                        dynamicPosition={ true }
+                        focusAfterOpen={ true }
+                        onClose={ () => setPopupInfo({
+                            ...popupInfo, [entry._id] : false,
+                        }) }
+                        anchor="top"
+                        maxWidth="800px"
+                    >
+                        <div className="popup card ">
+                            <div className="card-body">
+                                <h5 className="card-title">{ entry.title }</h5>
+                                { entry.address && <p className="card-text">Address: { entry.address }</p> }
+                                { entry.category && <p className="card-text">Category: { entry.category }</p> }
+                                <div className="button-container d-flex justify-content-between">
+                                    <button className="btn btn-primary btn-sm">Update</button>
+                                    <button className="btn btn-danger btn-sm"
+                                            onClick={ async () => {
+                                                const success = await deletePointOfInterest(entry._id);
+                                                if (success) {
+                                                    await getEntries();
+                                                }
+                                            } }>Delete
                                     </button>
                                 </div>
-                            )) : <p className="list-group-item text-danger">NOT SELECTED</p> }
+                            </div>
                         </div>
-                    </div>
+                    </Popup>) : null }
+                </React.Fragment>))) }
 
-                    <div className="card mb-4">
-                        <div className="card-header">Destination</div>
-                        <div className="card-body">
-                            { destination ? <p className="text-success">{ destination.name }</p> :
-                                <p className="text-danger">NOT SELECTED</p> }
-                        </div>
+            <button style={ {position : 'absolute', bottom : 60, right : 15} }
+                    className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
+                    onClick={ handleSignOut }>
+                Logout
+            </button>
+            <div>
+                <button
+                    style={ {position : 'absolute', bottom : 20, right : 15} }
+                    onClick={ () => setShowConfirmModal(true) }
+                    className="btn btn-sm btn-primary btn-danger text-uppercase fw-bold mb-2">
+                    Wipe Data
+                </button>
+                <ConfirmationModal
+                    show={ showConfirmModal }
+                    handleClose={ () => setShowConfirmModal(false) }
+                    handleConfirm={ handleDeleteAccount }
+                    message="Are you sure you want to delete your account and all related data? This action cannot be undone."
+                />
+            </div>
+        </Map>) }
+
+        { showSidebar && (<div className="sidebar bg-light p-3" style={ {
+                position : 'absolute', top : 0, left : 0, width : '350px', height : '100%', overflowY : 'auto'
+            } }>
+                <h2 className="text-center mb-4">AI Trip Planner</h2>
+                <p className="text-muted">Follow these steps to plan your trip:</p>
+                <ul className="list-group list-group-flush mb-4">
+                    <li className="list-group-item">Choose your <strong>origin</strong> marker.</li>
+                    <li className="list-group-item">Choose your <strong>destination</strong> marker.</li>
+                    <li className="list-group-item">Add any <strong>waypoints</strong> you wish to include in your
+                        route.
+                    </li>
+                    <li className="list-group-item">Click on "<strong>AI Recommendations</strong>" to generate your
+                        travel plan.
+                    </li>
+                </ul>
+                <div className="card mb-3">
+                    <div className="card-header">Origin</div>
+                    <div className="card-body d-flex justify-content-between align-items-center">
+                        { origin ? (<>
+                                <p className="mb-0 text-dark">{ origin.name }</p>
+                                <button className="btn btn-outline-danger btn-sm" onClick={ () => removeOrigin() }>
+                                    <i className="fas fa-minus"></i>
+                                </button>
+                            </>) : <p className="text-danger">NOT SELECTED</p> }
                     </div>
-                    <button className="btn btn-info w-100">Confirm Route</button>
                 </div>
-            ) }
-        </div>
-    );
+                <div className="card mb-3">
+                    <div className="card-header">Waypoints</div>
+                    <div className="card-body">
+                        { waypoints && waypoints.length > 0 ? waypoints.map((wp, index) => (
+                            <div key={ index } className="d-flex justify-content-between align-items-center mb-2">
+                                <p className="mb-0 text-dark">{ wp.name }</p>
+                                <button className="btn btn-outline-danger btn-sm"
+                                        onClick={ () => removeWaypoint(index) }>
+                                    <i className="fas fa-minus"></i>
+                                </button>
+                            </div>)) : <p className="text-danger">NOT SELECTED</p> }
+                    </div>
+                </div>
+                <div className="card mb-4">
+                    <div className="card-header">Destination</div>
+                    <div className="card-body d-flex justify-content-between align-items-center">
+                        { destination ? (<>
+                                <p className="mb-0 text-dark">{ destination.name }</p>
+                                <button className="btn btn-outline-danger btn-sm" onClick={ () => removeDestination() }>
+                                    <i className="fas fa-minus"></i>
+                                </button>
+                            </>) : <p className="text-danger">NOT SELECTED</p> }
+                    </div>
+                </div>
+                <div className="clear-button-container text-center">
+                    <button onClick={ resetAllLocations } className="btn btn-danger btn-sm">Clear Selection</button>
+                    <button className="btn btn-success"><i className="fa-solid fa-wand-magic-sparkles"></i> AI
+                        Recommendations
+                    </button>
+                </div>
+            </div>) }
+
+    </div>);
 };
 
 export default App;
