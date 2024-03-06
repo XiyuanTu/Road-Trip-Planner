@@ -12,7 +12,10 @@ const app = express();
 
 app.enable('trust proxy');
 
-mongoose.connect('mongodb://localhost:27017/Travel-Planner', {
+localDBURI = 'mongodb://localhost:27017/Travel-Planner'
+cloudDBURI = 'mongodb+srv://xiyuan:xiyuan@cluster0.2d9vmgl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+
+mongoose.connect(cloudDBURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
