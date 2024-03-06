@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useCallback, useRef} from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
@@ -193,6 +194,16 @@ const App = () => {
         }
     }
 
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+
+        const items = Array.from(waypoints);
+        const [reorderedItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderedItem);
+
+        setWaypoints(items);
+    };
+
     return (<div>
         { !isAuthenticated ? (<AuthPage onSignIn={ handleSignIn }/>) : (<Map
             ref={ mapRef }
@@ -348,16 +359,18 @@ const App = () => {
                 position : 'absolute', top : 0, left : 0, width : '350px', height : '100%', overflowY : 'auto'
             } }>
                 <h2 className="text-center mb-4">AI Trip Planner</h2>
-                <p className="text-muted">Follow these steps to plan your trip:</p>
-                <ul className="list-group list-group-flush mb-4">
-                    <li className="list-group-item">Choose your <strong>origin</strong> marker.</li>
-                    <li className="list-group-item">Choose your <strong>destination</strong> marker.</li>
-                    <li className="list-group-item">Add any <strong>waypoints</strong> you wish to include in your
-                        route.
-                    </li>
-                    <li className="list-group-item">Click on "<strong>AI Recommendations</strong>" to generate your
-                        travel plan.
-                    </li>
+                <p>Follow these steps to plan your trip:</p>
+                <ul  className="list-group list-group-flush mb-4">
+                    <li className="list-inline-item"><i className="fas fa-map-marker-alt"></i> Choose your <strong>
+                        origin</strong> marker.</li>
+                    <li className="list-inline-item"><i className="fas fa-map-marker-alt"></i> Choose your <strong>
+                        destination</strong> marker.</li>
+                    <li className="list-inline-item"><i className="fas fa-map-marker-alt"></i> Add any <strong>
+                        waypoints</strong> you wish to include in your route.</li>
+                    <li className="list-inline-item"><i className="fas fa-hand-pointer"></i> Adjust <strong>waypoints
+                    </strong> as necessary by dragging and dropping.</li>
+                    <li className="list-inline-item"><i className="fas fa-mouse-pointer"></i> Click on "<strong>AI
+                        Recommendations</strong>" to generate your travel plan.</li>
                 </ul>
                 <div className="card mb-3">
                     <div className="card-header">Origin</div>
@@ -373,14 +386,31 @@ const App = () => {
                 <div className="card mb-3">
                     <div className="card-header">Waypoints</div>
                     <div className="card-body">
-                        { waypoints && waypoints.length > 0 ? waypoints.map((wp, index) => (
-                            <div key={ index } className="d-flex justify-content-between align-items-center mb-2">
-                                <p className="mb-0 text-dark">{ wp.name }</p>
-                                <button className="btn btn-outline-danger btn-sm"
-                                        onClick={ () => removeWaypoint(index) }>
-                                    <i className="fas fa-minus"></i>
-                                </button>
-                            </div>)) : <p className="text-danger">NOT SELECTED</p> }
+                        { waypoints && waypoints.length > 0 ?
+                            <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId="waypoints">
+                                {(provided) => (
+                                    <div {...provided.droppableProps} ref={provided.innerRef}>
+                                        {waypoints.map((wp, index) => (
+                                            <Draggable key={wp._id} draggableId={wp._id} index={index}>
+                                                {(provided) => (<div
+                                                        ref={ provided.innerRef } { ...provided.draggableProps } { ...provided.dragHandleProps }
+                                                        className="d-flex justify-content-between align-items-center mb-2">
+                                                    <i className="fas fa-grip-vertical" style={{paddingRight: '10px'}}></i>
+                                                    <p className="mb-0 text-dark flex-grow-1">{ wp.name }
+                                                        </p>
+                                                        <button className="btn btn-outline-danger btn-sm"
+                                                                onClick={ () => removeWaypoint(index) }>
+                                                            <i className="fas fa-minus"></i>
+                                                        </button>
+                                                    </div>)}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext> : <p className="text-danger">NOT SELECTED</p> }
                     </div>
                 </div>
                 <div className="card mb-4">
