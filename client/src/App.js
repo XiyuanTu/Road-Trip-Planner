@@ -4,7 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
 
 import Map, {
@@ -56,10 +55,9 @@ const App = () => {
     const [directionsEnabled, setDirectionsEnabled] = useState(false);
     const mapRef = useRef(null);
     const directionsRef = useRef(null);
-    const [pickOrigin, setPickOrigin] = useState(true);
     const [origin, setOrigin] = useState(null);
     const [destination, setDestination] = useState(null);
-    const [waypoints, setWaypoints] = useState(null);
+    const [waypoints, setWaypoints] = useState([]);
 
     // handle user logic
     const handleSignIn = (token) => {
@@ -74,7 +72,7 @@ const App = () => {
         setShowConfirmModal(false);
         setShowSidebar(false);
         setDirectionsEnabled(false);
-        resetDirections();
+        resetAllLocations();
     }
 
     const handleDeleteAccount = async () => {
@@ -99,7 +97,10 @@ const App = () => {
             accessToken: process.env.REACT_APP_MAPBOX_TOKEN,
             unit: 'metric',
             profile: 'mapbox/driving',
-            interactive: false //disable the default point picking behavior. Need to refresh to see the change
+            interactive: false,
+            congestion: true,
+            placeholderOrigin: "Your starting point",
+            placeholderDestination: "Your destination"
         });
     }
 
@@ -108,14 +109,14 @@ const App = () => {
         setLocationEntries(pointEntries);
     }
 
-    const resetDirections = () => {
+    // used to reset selections on map
+    const resetAllLocations = () => {
         if (directionsRef.current) {
             directionsRef.current.removeRoutes();
         }
-        setPickOrigin(true);
         setOrigin(null);
         setDestination(null);
-        setWaypoints(null);
+        setWaypoints([]);
     };
 
     // list location entries upon login
@@ -135,12 +136,12 @@ const App = () => {
             if (directionsEnabled) {
                 if (!map.hasControl(directionsRef.current)) {
                     map.addControl(directionsRef.current, 'top-left');
-                    resetDirections();
+                    resetAllLocations();
                 }
             } else {
                 if (map.hasControl(directionsRef.current)) {
                     map.removeControl(directionsRef.current);
-                    resetDirections();
+                    resetAllLocations();
                 }
             }
         }
@@ -149,6 +150,32 @@ const App = () => {
     useEffect(() => {
         setShowSidebar(directionsEnabled);
     }, [directionsEnabled]);
+
+    useEffect(() => {
+        if (!directionsRef.current) return;
+
+        directionsRef.current.removeRoutes();
+
+        if (origin) {
+            directionsRef.current.setOrigin(origin.coordinates);
+        }
+
+        if (destination) {
+            directionsRef.current.setDestination(destination.coordinates);
+        }
+
+        waypoints.forEach((wp, index) => {
+            if (wp && wp.coordinates) {
+                directionsRef.current.addWaypoint(index, wp.coordinates);
+            }
+        });
+    }, [destination, origin, waypoints]);
+
+
+    const removeWaypoint = (indexToRemove) => {
+        const filteredWaypoints = waypoints.filter((_, index) => index !== indexToRemove);
+        setWaypoints(filteredWaypoints);
+    };
 
     return (
         <div>
@@ -186,8 +213,8 @@ const App = () => {
 
                     <div style={{
                         position: 'absolute',
-                        top: showSidebar ? 150 : 70,
-                        left: 10,
+                        top: 20,
+                        left: "50%",
                         zIndex: 1,
                         display: 'flex',
                         alignItems: 'center'
@@ -197,7 +224,7 @@ const App = () => {
                             fontSize: '18px',
                             color: 'white',
                             textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-                        }}>Plan Your Trip!</span>
+                        }}>AI Driving Plan</span>
                         <label className="switch">
                             <input
                                 type="checkbox"
@@ -216,23 +243,32 @@ const App = () => {
                                 offset={[0, -40]}
                                 anchor="top"
                                 onClick={() => {
-                                    if (directionsEnabled) {
-                                        if (!pickOrigin) {
-                                            directionsRef.current = directionsRef.current.setDestination(entry.address);
-                                            setDestination({ name: entry.title, coordinates: [entry.longitude, entry.latitude] });
-                                        } else {
-                                            directionsRef.current = directionsRef.current.setOrigin(entry.address);
-                                            setOrigin({name: entry.title, coordinates: [entry.longitude, entry.latitude]});
-                                            setPickOrigin(false);
-                                        }
-                                    } else {
+                                    if (!directionsEnabled) {
                                         setPopupInfo({
                                             ...popupInfo,
                                             [entry._id]: true,
-                                        })
+                                        });
+                                        return;
                                     }
-                                }
-                                }
+
+                                    const point = {
+                                        name: entry.title,
+                                        coordinates: [entry.longitude, entry.latitude],
+                                        address: entry.address
+                                    };
+
+                                    if (!origin) {
+                                        directionsRef.current.setOrigin(entry.address);
+                                        setOrigin(point);
+                                    } else if (!destination) {
+                                        directionsRef.current.setDestination(entry.address);
+                                        setDestination(point);
+                                    } else {
+                                        const updatedWaypoints = [...waypoints, point];
+                                        setWaypoints(updatedWaypoints);
+                                    }
+                                }}
+
                             >
                             </Marker>
                             {
@@ -263,7 +299,7 @@ const App = () => {
                                                     <button className="btn btn-danger btn-sm" onClick={async () => {
                                                         const success = await deletePointOfInterest(entry._id);
                                                         if (success) {
-                                                            getEntries();
+                                                            await getEntries();
                                                         }
                                                     }}>Delete
                                                     </button>
@@ -310,8 +346,9 @@ const App = () => {
                 } }>
                     <h2 className="text-center mb-4">AI Trip Planner</h2>
                     <div className="button-container mb-4">
-                    <button onClick={ resetDirections } className="clear-origin-btn btn btn-primary btn-sm">Clear Selection
-                    </button>
+                        <button onClick={ resetAllLocations } className="clear-origin-btn btn btn-primary btn-sm">Clear
+                            Selection
+                        </button>
                     </div>
                     <div className="card mb-3">
                         <div className="card-header">Origin</div>
@@ -324,10 +361,16 @@ const App = () => {
                         <div className="card-header">Waypoints</div>
                         <div className="card-body">
                             { waypoints && waypoints.length > 0 ? waypoints.map((wp, index) => (
-                                <p key={ index } className="list-group-item">{ wp.name }</p>
+                                <div key={ index } className="list-group-item">
+                                    { wp.name }
+                                    <button className="btn btn-sm btn-danger"
+                                            onClick={ () => removeWaypoint(index) }>Remove
+                                    </button>
+                                </div>
                             )) : <p className="list-group-item text-danger">NOT SELECTED</p> }
                         </div>
                     </div>
+
                     <div className="card mb-4">
                         <div className="card-header">Destination</div>
                         <div className="card-body">
