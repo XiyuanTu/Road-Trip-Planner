@@ -11,6 +11,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  email: {
+    type : String,
+    required : true,
+    unique: true,
+  },
   pointOfInterests: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'PointOfInterest',

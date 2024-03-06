@@ -28,6 +28,19 @@ const App = () => {
         longitude : -100.6, latitude : 37.6, zoom : 5,
     });
 
+    const mapStyles = [
+        { label: "Streets", value: "mapbox://styles/mapbox/streets-v11" },
+        { label: "Outdoors", value: "mapbox://styles/mapbox/outdoors-v11" },
+        { label: "Light", value: "mapbox://styles/mapbox/light-v10" },
+        { label: "Dark", value: "mapbox://styles/mapbox/dark-v10" },
+        { label: "Satellite", value: "mapbox://styles/mapbox/satellite-v9" },
+        { label: "Traffic", value: "mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"}
+    ];
+
+    const [selectedStyle, setSelectedStyle] = useState(mapStyles[0].value);
+    const handleStyleChange = (event) => {
+        setSelectedStyle(event.target.value);
+    };
     // auth state
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -216,7 +229,7 @@ const App = () => {
                 position : 'absolute',
                 left : showSidebar ? '350px' : '0px',
             } }
-            mapStyle="mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz"
+            mapStyle={ selectedStyle }
             attributionControl={ false }
             onMouseEnter={ onMouseEnter }
             onMouseLeave={ onMouseLeave }
@@ -235,6 +248,25 @@ const App = () => {
             <FullscreenControl/>
             <NavigationControl/>
             <ScaleControl/>
+
+            <select
+                onChange={ handleStyleChange }
+                value={ selectedStyle }
+                style={ {
+                    position : 'absolute',
+                    top : 185,
+                    right : 10,
+                    padding: '5px',
+                    borderRadius: '4px',
+                    border: '1px solid #ccc',
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    zIndex: 1,
+                } }>
+                { mapStyles.map(style => (<option key={ style.label } value={ style.value }>{ style.label }</option>)) }
+            </select>
 
             <div style={ {
                 position : 'absolute',
@@ -356,11 +388,11 @@ const App = () => {
         </Map>) }
 
         { showSidebar && (<div className="sidebar bg-light p-3" style={ {
-                position : 'absolute', top : 0, left : 0, width : '350px', height : '100%', overflowY : 'auto'
-            } }>
-                <h2 className="text-center mb-4">AI Trip Planner</h2>
-                <p>Follow these steps to plan your trip:</p>
-                <ul  className="list-group list-group-flush mb-4">
+            position : 'absolute', top : 0, left : 0, width : '350px', height : '100%', overflowY : 'auto'
+        } }>
+            <h2 className="text-center mb-4">AI Trip Planner</h2>
+            <p>Follow these steps to plan your trip:</p>
+            <ul className="list-group list-group-flush mb-4">
                     <li className="list-inline-item"><i className="fas fa-map-marker-alt"></i> Choose your <strong>
                         origin</strong> marker.</li>
                     <li className="list-inline-item"><i className="fas fa-map-marker-alt"></i> Choose your <strong>

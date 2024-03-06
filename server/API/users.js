@@ -35,10 +35,14 @@ router.post('/login', async (req, res) => {
 
 router.post('/register', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
+    const existingUser = await User.findOne({ email: email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email is already in use, please log in.' });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({ username, hashPassword: hashedPassword });
+    const newUser = new User({ username, email, hashPassword: hashedPassword });
     const registeredUser = await newUser.save();
     res.json(registeredUser);
   } catch (error) {

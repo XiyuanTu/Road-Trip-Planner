@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 
 import { signIn } from "../API/userAPI";
 
@@ -6,17 +6,46 @@ const SignInForm = ({ onSignIn, onSwitch }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [remember, setRemember] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const token = await signIn(username, password);
+            if (remember) {
+                localStorage.setItem('rememberedUsername', username);
+                localStorage.setItem('rememberedPassword', password);
+            } else {
+                localStorage.removeItem('rememberedUsername');
+                localStorage.removeItem('rememberedPassword');
+            }
             localStorage.setItem('token', token);
             onSignIn(token);
         } catch (err) {
             setError(err.message);
         }
     };
+
+    const handleRememberChange = (e) => {
+        const checked = e.target.checked;
+        setRemember(checked);
+        if (!checked) {
+            localStorage.removeItem('rememberedUsername');
+            localStorage.removeItem('rememberedPassword');
+        }
+    };
+
+    useEffect(() => {
+        const rememberedUsername = localStorage.getItem('rememberedUsername');
+        const rememberedPassword = localStorage.getItem('rememberedPassword');
+        if (rememberedUsername && rememberedPassword) {
+            setUsername(rememberedUsername);
+            setPassword(rememberedPassword);
+            setRemember(true);
+        } else {
+            setRemember(false);
+        }
+    }, []);
 
     return (
     <div className="container-fluid ps-md-0">
@@ -44,13 +73,19 @@ const SignInForm = ({ onSignIn, onSwitch }) => {
                                     </div>
 
                                     <div className="form-check mb-3">
-                                        <input className="form-check-input" type="checkbox" value=""
-                                               id="rememberPasswordCheck"/>
+                                        <input
+                                            className="form-check-input"
+                                            type="checkbox"
+                                            checked={ remember }
+                                            onChange={ handleRememberChange }
+                                            id="rememberPasswordCheck"
+                                        />
                                         <label className="form-check-label" htmlFor="rememberPasswordCheck">
-                                            Remember password
+                                            Remember credentials
                                         </label>
+
                                     </div>
-                                    {error && <p className="error">{error}</p>}
+                                    { error && <p className="error">{ error }</p> }
                                     <div className="d-grid">
                                         <button className="btn btn-lg btn-primary btn-login text-uppercase fw-bold mb-2"
                                                 type="submit">Sign in

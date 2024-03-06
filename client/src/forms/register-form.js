@@ -16,7 +16,7 @@ const RegisterForm = ({ onSignIn, onSwitch }) => {
                 return;
             }
             try {
-                await register(username, password);
+                await register(username, password, email);
                 const token = await signIn(username, password);
                 localStorage.setItem('token', token);
                 onSignIn(token);
@@ -47,7 +47,7 @@ const RegisterForm = ({ onSignIn, onSwitch }) => {
                                             <input type="email" className="form-control" id="floatingInputEmail"
                                                    placeholder="name@example.com"
                                                    onChange={(e) => setEmail(e.target.value)}/>
-                                            <label htmlFor="floatingInputEmail">Email address (optional)</label>
+                                            <label htmlFor="floatingInputEmail">Email address</label>
                                         </div>
 
                                         <hr/>

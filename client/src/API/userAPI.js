@@ -18,14 +18,14 @@ export async function signIn(username, password) {
     }
 }
 
-export async function register(username, password) {
+export async function register(username, password, email) {
     const headers = {
         'Content-Type': 'application/json',
     };
     const response = await fetch(`${API_URL}/api/users/register`, {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify({username, password}),
+        body: JSON.stringify({username, password, email}),
     });
 
     const data = await response.json();
