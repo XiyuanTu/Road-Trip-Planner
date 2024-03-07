@@ -23,6 +23,8 @@ import GeocoderControl from './geocoder-control';
 
 import {jwtDecode} from "jwt-decode";
 
+import ChatbotApp from './ChatbotApp.js';
+
 const App = () => {
     const [viewState, setViewState] = React.useState({
         longitude : -100.6, latitude : 37.6, zoom : 5,
@@ -456,11 +458,20 @@ const App = () => {
                             </>) : <p className="text-danger">NOT SELECTED</p> }
                     </div>
                 </div>
+                <div className="card mb-4">
+                    <div className="card-header">TimeLength</div>
+                    <div className="card-body d-flex justify-content-between align-items-center">
+                        { destination ? (<>
+                                <p className="mb-0 text-dark">{ destination.name }</p>
+                                <button className="btn btn-outline-danger btn-sm" onClick={ () => removeDestination() }>
+                                    <i className="fas fa-minus"></i>
+                                </button>
+                            </>) : <p className="text-danger">NOT SELECTED</p> }
+                    </div>
+                </div>
                 <div className="clear-button-container text-center">
                     <button onClick={ resetAllLocations } className="btn btn-danger btn-sm">Clear Selection</button>
-                    <button className="btn btn-success"><i className="fa-solid fa-wand-magic-sparkles"></i> AI
-                        Recommendations
-                    </button>
+                    <ChatbotApp origin={origin} destination={destination} timeLength={10} waypointSetter={[waypoints, setWaypoints]}/>
                 </div>
             </div>) }
 
