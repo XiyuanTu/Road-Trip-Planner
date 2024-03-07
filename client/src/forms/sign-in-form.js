@@ -93,9 +93,6 @@ const SignInForm = ({ onSignIn, onSwitch }) => {
                                         <button onClick={onSwitch} className="btn btn-lg btn-success btn-login text-uppercase fw-bold mb-2"
                                                 type="button">Register
                                         </button>
-                                        <div className="text-center">
-                                            <a className="small" href="#">Forgot password?</a>
-                                        </div>
                                     </div>
                                 </form>
                             </div>

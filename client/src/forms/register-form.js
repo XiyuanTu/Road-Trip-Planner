@@ -26,7 +26,7 @@ const RegisterForm = ({ onSignIn, onSwitch }) => {
         }
 
         return (
-            <body className="register-body">
+            <div className="register-body">
                 <div className="container">
                     <div className="row">
                         <div className="col-lg-10 col-xl-9 mx-auto">
@@ -77,27 +77,13 @@ const RegisterForm = ({ onSignIn, onSwitch }) => {
                                             </a>
 
                                             <hr className="my-4"/>
-
-                                                <div className="d-grid mb-2">
-                                                    <button className="btn btn-lg btn-google btn-login fw-bold text-uppercase"
-                                                            type="submit">
-                                                        <i className="fab fa-google me-2"></i> Sign up with Google
-                                                    </button>
-                                                </div>
-
-                                                <div className="d-grid">
-                                                    <button className="btn btn-lg btn-facebook btn-login fw-bold text-uppercase"
-                                                            type="submit">
-                                                        <i className="fab fa-facebook-f me-2"></i> Sign up with Facebook
-                                                    </button>
-                                                </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </body>
+            </div>
     );
     };
 
