@@ -387,7 +387,7 @@ const App = () => {
             </div>
         </Map>) }
 
-        { showSidebar && (<div className="sidebar bg-light p-3" style={ {
+        { showSidebar && (<div className="sidebar bg-light p-3 gradient-background" style={ {
             position : 'absolute', top : 0, left : 0, width : '350px', height : '100%', overflowY : 'auto'
         } }>
             <h2 className="text-center mb-4">AI Trip Planner</h2>
