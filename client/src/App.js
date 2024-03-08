@@ -461,12 +461,7 @@ const App = () => {
                 <div className="card mb-4">
                     <div className="card-header">TimeLength</div>
                     <div className="card-body d-flex justify-content-between align-items-center">
-                        { destination ? (<>
-                                <p className="mb-0 text-dark">{ destination.name }</p>
-                                <button className="btn btn-outline-danger btn-sm" onClick={ () => removeDestination() }>
-                                    <i className="fas fa-minus"></i>
-                                </button>
-                            </>) : <p className="text-danger">NOT SELECTED</p> }
+                        
                     </div>
                 </div>
                 <div className="clear-button-container text-center">

@@ -10,15 +10,57 @@ const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
 
   //   const [apiResponse, setApiResponse] = useState("");
 
-  // const dummyInput = {
-  //   origin: "Mccandless Drive",
-  //   Waypoints: ["Salt Lake City", "Twin Falls"],
-  //   Destination: "Seattle Aquarium",
-  //   timeLegth: 10,
-  // };
+  const addWaypoints = async (locations) => {
+    const promises = locations.map(async (location) => {
+      const apiUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+        location
+      )}.json?country=us&limit=1&language=en&autocomplete=false&access_token=${
+        process.env.REACT_APP_MAPBOX_TOKEN
+      }`;
 
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const features = data.features;
+
+        if (features && features.length > 0) {
+          const result = features[0];
+          const point = {
+            // _id: result.properties.wikidata || "",
+            _id: result.id,
+            name: result.text_en,
+            coordinates:
+              result?.center ||
+              (result.geometry?.type === "Point" &&
+                result.geometry.coordinates),
+            address: result.place_name_en,
+          };
+          return point;
+        } else {
+          console.log("No results found for location: ", location);
+          return null;
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+        return null;
+      }
+    });
+
+    try {
+      const newWaypoints = await Promise.all(promises);
+      const filteredWaypoints = newWaypoints.filter((point) => point !== null);
+      setWaypoints([...waypoints, ...filteredWaypoints]);
+    } catch (error) {
+      console.error("Error adding waypoints:", error);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // console.log(origin, destination, waypoints);
     const tools = [
       {
         type: "function",
@@ -45,15 +87,11 @@ const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
     const messages = [
       {
         role: "system",
-        content: `you are an assistant helping users to plan their trip. 
-          Here are some requirements: 
-          the user will travel by driving. 
-          the time length of the trip is: ${timeLength} days.
-          the origin is: ${origin}, and the destination is: ${destination}.
-          want-yo-go landmarks include: ${waypoints}.
-          no further information from user can be acquired.
-          please schedule an interesting travelling plan for the user with popular must-visit places
-           `,
+
+        content: `Create a compelling road trip itinerary for the user, spanning ${timeLength} days from ${origin} to ${destination}. 
+        Suggest a concise list of must-visit landmarks, including ${waypoints}, 
+        with the total number of places (x) flexible and within the range of 0 to 25. 
+        Consider the user's preferences, as no additional information is available.`,
       },
     ];
     try {
@@ -73,7 +111,10 @@ const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
       messages.push(responseMessage);
       messages.push({
         role: "system",
-        content: `according to this itinerary please depict all the landmarks/places to visit on map including all the examples mentioned`,
+        content: `Based on the provided itinerary, visualize all the landmarks/places to visit on a map, 
+        including the examples mentioned. If possible, exclude city/state names—for instance, 
+        'Hollywood Walk of Fame, Los Angeles' should be 'Hollywood Walk of Fame.' 
+        Ensure the depiction adheres to a quantity limit of 25`,
       });
       const secondRes = await openai.chat.completions.create({
         model: "gpt-3.5-turbo-0125",
@@ -89,28 +130,11 @@ const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
           const functionArgs = JSON.parse(toolCall.function.arguments);
 
           console.log(functionArgs);
-          for (const location of functionArgs.locations) {
-            console.log(location);
-          //   if (
-          //     location === origin ||
-          //     location === destination ||
-          //     location in waypoints
-          //   )
-          //     continue;
-            
-          //   const point = {
-          //     _id: entry._id,
-          //     name: entry.title,
-          //     coordinates: [entry.longitude, entry.latitude],
-          //     address: entry.address,
-          //   };
-          //   setWaypoints(...waypoints, location);
-          }
+          await addWaypoints(functionArgs.locations);
         }
       }
     } catch (e) {
       console.log(e);
-      //   setApiResponse("Something is going wrong, Please try again.");
     }
   };
 
