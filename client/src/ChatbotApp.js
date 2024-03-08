@@ -1,7 +1,7 @@
 import { useState } from "react";
 import OpenAI from "openai";
 
-const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
+const ChatbotApp = ({ origin, destination, waypointSetter }) => {
   const [waypoints, setWaypoints] = waypointSetter;
   const openai = new OpenAI({
     apiKey: process.env.REACT_APP_OPENAI_API_KEY,
@@ -113,7 +113,8 @@ const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
       messages.push({
         role: "system",
         content: `Based on the provided itinerary, visualize all the landmarks/places to visit on a map, 
-        including the examples mentioned. If possible, exclude city/state names—for instance, 
+        including the examples mentioned except origin and destination. 
+        If possible, exclude city/state names—for instance, 
         'Hollywood Walk of Fame, Los Angeles' should be 'Hollywood Walk of Fame.' 
         Ensure the depiction adheres to a quantity limit of 25`,
       });
@@ -123,7 +124,7 @@ const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
         tools: tools,
       });
       const secondResMessage = secondRes.choices[0].message;
-      console.log(secondResMessage);
+      // console.log(secondResMessage);
       // Step 2: check if the model wanted to call a function
       const toolCalls = secondResMessage.tool_calls;
       if (toolCalls) {

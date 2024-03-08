@@ -458,7 +458,7 @@ const App = () => {
                             </>) : <p className="text-danger">NOT SELECTED</p> }
                     </div>
                 </div>
-                <ChatbotApp origin={origin} destination={destination} timeLength={10} waypointSetter={[waypoints, setWaypoints]}/>
+                <ChatbotApp origin={origin} destination={destination} waypointSetter={[waypoints, setWaypoints]}/>
                 
                 <div className="clear-button-container text-center">
                     <button onClick={ resetAllLocations } className="btn btn-danger btn-sm">Clear Selection</button>
