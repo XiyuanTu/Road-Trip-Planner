@@ -30,12 +30,14 @@ const App = () => {
     });
 
     const mapStyles = [
-        { label: "Streets", value: "mapbox://styles/mapbox/streets-v11" },
-        { label: "Outdoors", value: "mapbox://styles/mapbox/outdoors-v11" },
-        { label: "Light", value: "mapbox://styles/mapbox/light-v10" },
-        { label: "Dark", value: "mapbox://styles/mapbox/dark-v10" },
-        { label: "Satellite", value: "mapbox://styles/mapbox/satellite-v9" },
-        { label: "Traffic", value: "mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz" }
+        { label: "Default", value: "mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz" },
+        { label: "Streets", value: "mapbox://styles/mapbox/streets-v12" },
+        { label: "Light", value: "mapbox://styles/mapbox/light-v11" },
+        { label: "Dark", value: "mapbox://styles/mapbox/dark-v11" },
+        { label: "Satellite", value: "mapbox://styles/mapbox/satellite-streets-v12" },
+        { label: "3D", value: "mapbox://styles/mapbox/standard" },
+        { label: "Day", value: "mapbox://styles/mapbox/navigation-day-v1" },
+        { label: "Night", value: "mapbox://styles/mapbox/navigation-night-v1" }
     ];
 
     const [selectedStyle, setSelectedStyle] = useState(mapStyles[0].value);
@@ -181,24 +183,23 @@ const App = () => {
 
         const map = mapRef.current.getMap();
         if (origin && destination) {
-            let sWLng = Math.min(origin.coordinates[0], destination.coordinates[0])
-            let nELng = Math.max(origin.coordinates[0], destination.coordinates[0])
-            let sWLat = Math.min(origin.coordinates[1], destination.coordinates[1])
-            let nELat = Math.max(origin.coordinates[1], destination.coordinates[1])
-            waypoints.forEach((wp) => {
-                if (wp && wp.coordinates) {
-                    let lng = wp.coordinates[0], lat = wp.coordinates[1]
-                    sWLng = Math.min(sWLng, lng)
-                    nELng = Math.max(nELng, lng)
-                    sWLat = Math.min(sWLat, lat)
-                    nELat = Math.max(nELat, lat)
+            let bounds = new LngLatBounds();
+            [origin, destination, ...waypoints].forEach(point => {
+                if (point && point.coordinates) {
+                    bounds.extend(point.coordinates);
                 }
             });
-            map.fitBounds([[sWLng, sWLat], [nELng, nELat]], {
-                padding: { left: 50, right: 400, top: 50, bottom: 50 }
+
+            map.fitBounds(bounds, {
+                padding: {
+                    top: 50,
+                    bottom: 50,
+                    left: 50,
+                    right: 400,
+                },
+                duration: 2000,
             });
         }
-
     }, [destination, origin, waypoints]);
 
     const removeWaypoint = (indexToRemove) => {
@@ -246,10 +247,10 @@ const App = () => {
             onMove={evt => setViewState(evt.viewState)}
             mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
             style={{
-                width: showSidebar ? 'calc(100vw - 350px)' : '100vw',
+                width: showSidebar ? '80vw' : '100vw',
                 height: '100vh',
                 position: 'absolute',
-                left: showSidebar ? '350px' : '0px',
+                left: showSidebar ? '20vw' : '0px',
             }}
             mapStyle={selectedStyle}
             attributionControl={false}
@@ -410,7 +411,7 @@ const App = () => {
         </Map>)}
 
         {showSidebar && (<div className="sidebar bg-light p-3 gradient-background" style={{
-            position: 'absolute', top: 0, left: 0, width: '350px', height: '100%', overflowY: 'auto'
+            position: 'absolute', top: 0, left: 0, width: '20vw', height: '100%', overflowY: 'auto'
         }}>
             <h2 className="text-center mb-4">AI Trip Planner</h2>
             <p>Follow these steps to plan your trip:</p>
