@@ -1,4 +1,4 @@
-// import { useState } from "react";
+import { useState } from "react";
 import OpenAI from "openai";
 
 const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
@@ -7,8 +7,7 @@ const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
     apiKey: process.env.REACT_APP_OPENAI_API_KEY,
     dangerouslyAllowBrowser: true,
   });
-
-  //   const [apiResponse, setApiResponse] = useState("");
+  const [prompt, setPrompt] = useState("");
 
   const addWaypoints = async (locations) => {
     const promises = locations.map(async (location) => {
@@ -84,11 +83,13 @@ const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
         },
       },
     ];
+    // console.log(prompt);
     const messages = [
       {
         role: "system",
 
-        content: `Create a compelling road trip itinerary for the user, spanning ${timeLength} days from ${origin} to ${destination}. 
+        content: `Create a compelling road trip itinerary for the user from ${origin} to ${destination}. 
+        And here are additional information provided by the user: ${prompt}
         Suggest a concise list of must-visit landmarks, including ${waypoints}, 
         with the total number of places (x) flexible and within the range of 0 to 25. 
         Consider the user's preferences, as no additional information is available.`,
@@ -104,7 +105,7 @@ const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
 
       const responseMessage = response.choices[0].message;
 
-      console.log(response.choices[0].message.content);
+      // console.log(response.choices[0].message.content);
       //   setApiResponse(response.choices[0].message.content);
 
       // get the plan and produce jsons as routing inputs
@@ -140,9 +141,25 @@ const ChatbotApp = ({ origin, destination, timeLength, waypointSetter }) => {
 
   return (
     <>
-      <button className="btn btn-success" onClick={handleSubmit}>
-        <i className="fa-solid fa-wand-magic-sparkles"></i>AI Recommendations{" "}
-      </button>
+      <form onSubmit={handleSubmit}>
+        <div className="card mb-4">
+          <div className="card-header">Additional Details for AI</div>
+          <textarea
+            maxLength="100"
+            className="form-control"
+            type="text"
+            value={prompt}
+            placeholder="Specify additional preferences in natural language (max length 100)"
+            onChange={(e) => setPrompt(e.target.value)}
+          ></textarea>
+        </div>
+        <div className="clear-button-container text-center">
+          <button className="btn btn-success" type="submit">
+            <i className="fa-solid fa-wand-magic-sparkles"></i>AI
+            Recommendations
+          </button>
+        </div>
+      </form>
     </>
   );
 };

@@ -458,15 +458,10 @@ const App = () => {
                             </>) : <p className="text-danger">NOT SELECTED</p> }
                     </div>
                 </div>
-                <div className="card mb-4">
-                    <div className="card-header">TimeLength</div>
-                    <div className="card-body d-flex justify-content-between align-items-center">
-                        
-                    </div>
-                </div>
+                <ChatbotApp origin={origin} destination={destination} timeLength={10} waypointSetter={[waypoints, setWaypoints]}/>
+                
                 <div className="clear-button-container text-center">
                     <button onClick={ resetAllLocations } className="btn btn-danger btn-sm">Clear Selection</button>
-                    <ChatbotApp origin={origin} destination={destination} timeLength={10} waypointSetter={[waypoints, setWaypoints]}/>
                 </div>
             </div>) }
 
