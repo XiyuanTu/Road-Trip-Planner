@@ -8,7 +8,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
 
 import Map, {
-    Marker, Popup, NavigationControl, FullscreenControl, ScaleControl, GeolocateControl, AttributionControl
+    Marker, Popup, NavigationControl, FullscreenControl, ScaleControl, GeolocateControl, AttributionControl,
 } from 'react-map-gl';
 
 import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
@@ -26,18 +26,17 @@ import { LngLatBounds } from 'mapbox-gl';
 
 const App = () => {
     const [viewState, setViewState] = React.useState({
-        longitude: -100.6, latitude: 37.6, zoom: 5,
+        longitude: -100.6, latitude: 37.6, zoom: 4,
     });
 
     const mapStyles = [
-        { label: "Default", value: "mapbox://styles/junjiefang1996/clr9men5i000v01oca04nhrbz" },
         { label: "Streets", value: "mapbox://styles/mapbox/streets-v12" },
+        { label: "Cityscape", value: "mapbox://styles/mapbox/standard" },
         { label: "Light", value: "mapbox://styles/mapbox/light-v11" },
         { label: "Dark", value: "mapbox://styles/mapbox/dark-v11" },
         { label: "Satellite", value: "mapbox://styles/mapbox/satellite-streets-v12" },
-        { label: "3D", value: "mapbox://styles/mapbox/standard" },
-        { label: "Day", value: "mapbox://styles/mapbox/navigation-day-v1" },
-        { label: "Night", value: "mapbox://styles/mapbox/navigation-night-v1" }
+        { label: "Traffic Day", value: "mapbox://styles/mapbox/navigation-day-v1" },
+        { label: "Traffic Night", value: "mapbox://styles/mapbox/navigation-night-v1" }
     ];
 
     const [selectedStyle, setSelectedStyle] = useState(mapStyles[0].value);
@@ -240,11 +239,30 @@ const App = () => {
         setWaypoints(items);
     };
 
+    const onMoveEnd = (evt) => {
+        if (selectedStyle === mapStyles[1].value && evt.viewState.zoom > 12) {
+            setViewState(prevState => ({
+                ...prevState,
+                pitch: 45,
+                bearing: 30,
+                duration: 1000,
+            }));
+        } else {
+            setViewState(prevState => ({
+                ...prevState,
+                pitch: 0,
+                bearing: 0,
+                duration: 1000,
+            }));
+        }
+    };
+
     return (<div>
         {!isAuthenticated ? (<AuthPage onSignIn={handleSignIn} />) : (<Map
             ref={mapRef}
             {...viewState}
             onMove={evt => setViewState(evt.viewState)}
+            onMoveEnd={onMoveEnd}
             mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
             style={{
                 width: showSidebar ? '80vw' : '100vw',
