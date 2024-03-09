@@ -8,6 +8,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
     dangerouslyAllowBrowser: true,
   });
   const [prompt, setPrompt] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const addWaypoints = async (locations) => {
     const promises = locations.map(async (location) => {
@@ -59,6 +60,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     // console.log(origin, destination, waypoints);
     const tools = [
       {
@@ -71,6 +73,8 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
             properties: {
               locations: {
                 type: "array",
+                description:
+                  "an array which has only 25 slots",
                 items: {
                   type: "string",
                   description:
@@ -87,12 +91,15 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
     const messages = [
       {
         role: "system",
-
-        content: `Create a compelling road trip itinerary for the user from ${origin} to ${destination}. 
-        And here are additional information provided by the user: ${prompt}
-        Suggest a concise list of must-visit landmarks, including ${waypoints}, 
-        with the total number of places (x) flexible and within the range of 0 to 25. 
-        Consider the user's preferences, as no additional information is available.`,
+        content: `Create a compelling road trip itinerary from ${origin} to ${destination} for the user. 
+        Include these preferences: ${prompt}
+        Suggest a concise list of must-visit landmarks, limiting the total number (x) to a maximum of 25. 
+        Consider the user's preferences, and provide a balanced and diverse selection of landmarks.`,
+        // content: `Create a compelling road trip itinerary for the user from ${origin} to ${destination}.
+        // And here are additional information provided by the user: ${prompt}
+        // Suggest a concise list of must-visit landmarks, including ${waypoints},
+        // with the total number of places (x) flexible and within the range of 0 to 25.
+        // Consider the user's preferences, as no additional information is available.`,
       },
     ];
     try {
@@ -113,10 +120,15 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
       messages.push({
         role: "system",
         content: `Based on the provided itinerary, visualize all the landmarks/places to visit on a map, 
-        including the examples mentioned except origin and destination. 
+        excluding the origin and destination. 
         If possible, exclude city/state names—for instance, 
         'Hollywood Walk of Fame, Los Angeles' should be 'Hollywood Walk of Fame.' 
-        Ensure the depiction adheres to a quantity limit of 25`,
+        Ensure the depiction adheres to a quantity limit of 25, focusing on the most prominent and significant landmarks.`,
+        // content: `Based on the provided itinerary, visualize all the landmarks/places to visit on a map,
+        // including the examples mentioned except origin and destination.
+        // If possible, exclude city/state names—for instance,
+        // 'Hollywood Walk of Fame, Los Angeles' should be 'Hollywood Walk of Fame.'
+        // Ensure the depiction adheres to a quantity limit of 25`,
       });
       const secondRes = await openai.chat.completions.create({
         model: "gpt-3.5-turbo-0125",
@@ -135,6 +147,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
           await addWaypoints(functionArgs.locations);
         }
       }
+      setLoading(false);
     } catch (e) {
       console.log(e);
     }
@@ -155,9 +168,21 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
           ></textarea>
         </div>
         <div className="clear-button-container text-center">
-          <button className="btn btn-success" type="submit">
+          {/* <button className="btn btn-success" type="submit">
             <i className="fa-solid fa-wand-magic-sparkles"></i>AI
             Recommendations
+          </button> */}
+          <button className="btn btn-success" type="submit" disabled={loading}>
+            {loading ? (
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            ) : (
+              <>
+                <i className="fa-solid fa-wand-magic-sparkles"></i>AI
+                Recommendations
+              </>
+            )}
           </button>
         </div>
       </form>
