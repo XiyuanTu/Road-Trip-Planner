@@ -11,6 +11,14 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
   const [loading, setLoading] = useState(false);
 
   const addWaypoints = async (locations) => {
+    // used to exclude dups
+    const wikidataSet = new Set();
+    const idSet = new Set();
+    waypoints.forEach((point) => {
+      wikidataSet.add(point.wikidata);
+      idSet.add(point._id);
+    });
+    
     const promises = locations.map(async (location) => {
       const apiUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
         location
@@ -29,9 +37,15 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
 
         if (features && features.length > 0) {
           const result = features[0];
+          const wikidata = result.properties.wikidata;
+          // exclude dups
+          if (idSet.has(result.id)) return null;
+          if (wikidata && wikidataSet.has(wikidata)) return null;
+
           const point = {
             // _id: result.properties.wikidata || "",
             _id: result.id,
+            wikidata: result.properties.wikidata || "",
             name: result.text_en,
             coordinates:
               result?.center ||
@@ -52,7 +66,9 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
 
     try {
       const newWaypoints = await Promise.all(promises);
-      const filteredWaypoints = newWaypoints.filter((point) => point !== null);
+      const filteredWaypoints = newWaypoints.filter(
+        (point) => point !== null && point
+      );
       setWaypoints([...waypoints, ...filteredWaypoints]);
     } catch (error) {
       console.error("Error adding waypoints:", error);
@@ -73,8 +89,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
             properties: {
               locations: {
                 type: "array",
-                description:
-                  "an array which has only 25 slots",
+                description: "an array which has only 25 slots",
                 items: {
                   type: "string",
                   description:
@@ -92,8 +107,9 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
       {
         role: "system",
         content: `Create a compelling road trip itinerary from ${origin} to ${destination} for the user. 
-        Include these preferences: ${prompt}
-        Suggest a concise list of must-visit landmarks, limiting the total number (x) to a maximum of 25. 
+        And here are additional information provided by the user: ${prompt}
+        Suggest a concise list of must-visit landmarks, including ${waypoints},
+        limiting the total number of places (x) to a maximum of 25. 
         Consider the user's preferences, and provide a balanced and diverse selection of landmarks.`,
         // content: `Create a compelling road trip itinerary for the user from ${origin} to ${destination}.
         // And here are additional information provided by the user: ${prompt}
@@ -120,7 +136,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
       messages.push({
         role: "system",
         content: `Based on the provided itinerary, visualize all the landmarks/places to visit on a map, 
-        excluding the origin and destination. 
+        excluding all the given places from user(origin, destination, and waypoints). 
         If possible, exclude city/state names—for instance, 
         'Hollywood Walk of Fame, Los Angeles' should be 'Hollywood Walk of Fame.' 
         Ensure the depiction adheres to a quantity limit of 25, focusing on the most prominent and significant landmarks.`,
