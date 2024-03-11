@@ -328,3 +328,9 @@ input:checked + .slider:before {
   background-color: #28a745;
   border-color: #28a745;
 }
+
+.gradient-background {
+  background: linear-gradient(250deg, #ffb4bb, #ef8a7f, #a760ff);
+  background-size: 100% 100%;
+  animation: gradient-animation 10s ease infinite;
+}
