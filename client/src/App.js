@@ -24,6 +24,8 @@ import GeocoderControl from './geocoder-control';
 import { jwtDecode } from "jwt-decode";
 import { LngLatBounds } from 'mapbox-gl';
 
+import ChatbotApp from './ChatbotApp.js';
+
 const App = () => {
     const [viewState, setViewState] = React.useState({
         longitude: -100.6, latitude: 37.6, zoom: 4,
@@ -485,6 +487,11 @@ const App = () => {
                             </Droppable>
                         </DragDropContext> : <p className="text-danger">NOT SELECTED</p>}
                 </div>
+
+                <ChatbotApp origin={origin} destination={destination} waypointSetter={[waypoints, setWaypoints]}/>
+                
+                <div className="clear-button-container text-center">
+                    <button onClick={ resetAllLocations } className="btn btn-danger btn-sm">Clear Selection</button>
             </div>
             <div className="card mb-4">
                 <div className="card-header">Destination</div>
@@ -495,6 +502,7 @@ const App = () => {
                             <i className="fas fa-minus"></i>
                         </button>
                     </>) : <p className="text-danger">NOT SELECTED</p>}
+
                 </div>
             </div>
             <div className="clear-button-container text-center">
