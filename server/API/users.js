@@ -35,7 +35,10 @@ router.post('/login', async (req, res) => {
 
 router.post('/register', async (req, res) => {
   try {
-    const { username, password, email } = req.body;
+    const { username, password, email, invitationCode } = req.body;
+    if (invitationCode !== process.env.INVITATION_CODE) {
+      return res.status(400).json({ message: 'Invitation code doesn\'t exist.' });
+    }
     const existingUsername = await User.findOne({ username });
     if (existingUsername) {
       return res.status(400).json({ message: 'Username is already taken, please use a different username.' });
