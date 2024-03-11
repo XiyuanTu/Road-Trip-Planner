@@ -12,8 +12,7 @@ const app = express();
 
 app.enable('trust proxy');
 
-
-mongoose.connect(process.env.LOCAL_DB_URL, {
+mongoose.connect(process.env.CLOUD_DB_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
