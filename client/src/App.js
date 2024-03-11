@@ -31,16 +31,15 @@ const App = () => {
         longitude : -100.6, latitude : 37.6, zoom : 4,
     });
 
-    const mapStyles = [{label : "Streets", value : "mapbox://styles/mapbox/streets-v12"}, {
-        label : "Cityscape",
-        value : "mapbox://styles/mapbox/standard"
-    }, {label : "Light", value : "mapbox://styles/mapbox/light-v11"}, {
-        label : "Dark",
-        value : "mapbox://styles/mapbox/dark-v11"
-    }, {label : "Satellite", value : "mapbox://styles/mapbox/satellite-streets-v12"}, {
-        label : "Traffic Day",
-        value : "mapbox://styles/mapbox/navigation-day-v1"
-    }, {label : "Traffic Night", value : "mapbox://styles/mapbox/navigation-night-v1"}];
+    const mapStyles = [
+        {label : "Streets", value : "mapbox://styles/mapbox/streets-v12"}, {
+            label : "Cityscape", value : "mapbox://styles/mapbox/standard"
+        }, {label : "Light", value : "mapbox://styles/mapbox/light-v11"}, {
+            label : "Dark", value : "mapbox://styles/mapbox/dark-v11"
+        }, {label : "Satellite", value : "mapbox://styles/mapbox/satellite-streets-v12"}, {
+            label : "Traffic Day", value : "mapbox://styles/mapbox/navigation-day-v1"
+        }, {label : "Traffic Night", value : "mapbox://styles/mapbox/navigation-night-v1"}
+    ];
 
     const [selectedStyle, setSelectedStyle] = useState(mapStyles[0].value);
     const handleStyleChange = (event) => {
@@ -241,11 +240,11 @@ const App = () => {
     const onMoveEnd = (evt) => {
         if (selectedStyle === mapStyles[1].value && evt.viewState.zoom > 12) {
             setViewState(prevState => ({
-                ...prevState, pitch : 45, bearing : 30, duration : 1000,
+                ...prevState, pitch : 60, bearing : 0,
             }));
         } else {
             setViewState(prevState => ({
-                ...prevState, pitch : 0, bearing : 0, duration : 1000,
+                ...prevState, pitch : 0, bearing : 0,
             }));
         }
     };
@@ -276,7 +275,7 @@ const App = () => {
                 getEntries={ getEntries }/> }
 
             <AttributionControl
-                customAttribution="Map design by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
+                customAttribution="App by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
                 position="bottom-right"/>
             <GeolocateControl/>
             <FullscreenControl/>
@@ -377,13 +376,18 @@ const App = () => {
                             ...popupInfo, [entry._id] : false,
                         }) }
                         anchor="top"
-                        maxWidth="800px"
+                        maxWidth="600px"
                     >
                         <div className="popup card ">
                             <div className="card-body">
                                 <h5 className="card-title">{ entry.title }</h5>
                                 { entry.address && <p className="card-text">Address: { entry.address }</p> }
                                 { entry.category && <p className="card-text">Category: { entry.category }</p> }
+                                { entry.imageURL && (
+                                    <div className="image-container mb-4" style={{ maxWidth: '600px', height: '300px', overflow: 'hidden' }}>
+                                        <img src={entry.imageURL} alt="Location" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                    </div>
+                                )}
                                 <div className="button-container d-flex justify-content-between">
                                     <button className="btn btn-primary btn-sm">Update</button>
                                     <button className="btn btn-danger btn-sm"
