@@ -171,6 +171,17 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
 
   return (
     <>
+      {loading && (
+          <div className="full-page-overlay">
+            <div className="loading-message">
+              <div className="loading-bar" role="status">
+                <div className="bar"></div>
+              </div>
+              AI is on the way...
+            </div>
+          </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         <div className="card mb-4">
           <div className="card-header">Additional Details for AI</div>

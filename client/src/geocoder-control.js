@@ -53,7 +53,7 @@ export default function GeocoderControl(props) {
         }
     };
 
-    const fetchVenueDetails = async (fsqId) => {
+    const fetchFoursquarePhoto = async (fsqId) => {
         const API_KEY = process.env.REACT_APP_FOURSQUARE_API_KEY;
         const url = `https://api.foursquare.com/v3/places/${fsqId}/photos?sort=POPULAR`;
 
@@ -101,10 +101,10 @@ export default function GeocoderControl(props) {
                 });
 
                 let fetchedImageUrl = null;
-                if (result.properties.foursquare) {
-                    fetchedImageUrl = await fetchVenueDetails(result.properties.foursquare);
-                } else if (result.properties.wikidata) {
+                if (result.properties.wikidata) {
                     fetchedImageUrl = await fetchWikidataImage(result.properties.wikidata);
+                } else if (result.properties.foursquare) {
+                    fetchedImageUrl = await fetchFoursquarePhoto(result.properties.foursquare);
                 }
                 setImageURL(fetchedImageUrl);
             }
