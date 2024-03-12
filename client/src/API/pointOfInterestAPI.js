@@ -35,3 +35,15 @@ export async function createPointOfInterest(entry) {
     return response.json();
 }
 
+export const updatePointOfInterest = async (entryId, newTitle) => {
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+    };
+    const response = await fetch(`${API_URL}/api/pointOfInterests/${entryId}`, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify({ title: newTitle }),
+    });
+    return await response.json();
+};

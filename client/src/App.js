@@ -13,7 +13,7 @@ import Map, {
 
 import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
 
-import { listPointOfInterests, deletePointOfInterest } from "./API/pointOfInterestAPI";
+import { listPointOfInterests, deletePointOfInterest, updatePointOfInterest } from "./API/pointOfInterestAPI";
 import { deleteUser } from "./API/userAPI";
 import ConfirmationModal from './API/confirmation-modal';
 
@@ -71,6 +71,31 @@ const App = () => {
 
     // track marker selection state
     const [selectedMarkers, setSelectedMarkers] = useState([]);
+
+    const [isEditing, setIsEditing] = useState(null);
+    const [editedTitle, setEditedTitle] = useState("");
+
+    // Function to handle title change
+    const handleTitleChange = (e, id) => {
+        if (id === isEditing) {
+            setEditedTitle(e.target.value);
+        }
+    };
+
+    // Function to save the edited title
+    const saveEditedTitle = async (entryId, newTitle) => {
+        try {
+            await updatePointOfInterest(entryId, newTitle);
+            setLocationEntries(locationEntries.map(entry =>
+                entry._id === entryId ? { ...entry, title: newTitle } : entry
+            ));
+            setIsEditing(null);
+            setEditedTitle("");
+        } catch (error) {
+            console.error('Error updating title:', error);
+        }
+    };
+
 
     // handle user logic
     const handleSignIn = (token) => {
@@ -380,25 +405,48 @@ const App = () => {
                     >
                         <div className="popup card ">
                             <div className="card-body">
-                                <h5 className="card-title">{ entry.title }</h5>
+                                { isEditing === entry._id ? (<input
+                                        type="text"
+                                        value={ editedTitle }
+                                        onChange={ (e) => handleTitleChange(e, entry._id) }
+                                        onBlur={ () => saveEditedTitle(entry._id, editedTitle) }
+                                        className="form-control"
+                                    />) : (<h5 className="card-title">
+                                        { entry.title }
+                                        <i className="fas fa-pencil-alt"
+                                           style={ {marginLeft : '10px', cursor : 'pointer'} } onClick={ () => {
+                                            setIsEditing(entry._id);
+                                            setEditedTitle(entry.title);
+                                        } }/>
+                                    </h5>) }
+
                                 { entry.address && <p className="card-text">Address: { entry.address }</p> }
                                 { entry.category && <p className="card-text">Category: { entry.category }</p> }
-                                { entry.imageURL && (
-                                    <div className="image-container mb-4" style={{ maxWidth: '600px', height: '300px', overflow: 'hidden' }}>
-                                        <img src={entry.imageURL} alt="Location" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                                    </div>
-                                )}
-                                <div className="button-container d-flex justify-content-between">
-                                    <button className="btn btn-primary btn-sm">Update</button>
-                                    <button className="btn btn-danger btn-sm"
+                                { entry.imageURL && (<div className="image-container mb-4" style={ {
+                                        maxWidth : '600px',
+                                        height : '300px',
+                                        overflow : 'hidden'
+                                    } }>
+                                        <img src={ entry.imageURL } alt="Location"
+                                             style={ {width : '100%', height : '100%', objectFit : 'contain'} }/>
+                                    </div>) }
+                                    <div className="delete-container" style={ {textAlign : 'right'} }>
+                                        <button
+                                            className="btn btn-outline-danger btn-sm"
+                                            style={ {padding : '0.25rem 0.5rem'} }
                                             onClick={ async () => {
-                                                const success = await deletePointOfInterest(entry._id);
-                                                if (success) {
-                                                    await getEntries();
+                                                // Add your confirmation logic here
+                                                const confirmDeletion = window.confirm('Are you sure you want to delete this?');
+                                                if (confirmDeletion) {
+                                                    const success = await deletePointOfInterest(entry._id);
+                                                    if (success) {
+                                                        await getEntries();
+                                                    }
                                                 }
-                                            } }>Delete
-                                    </button>
-                                </div>
+                                            } }
+                                        ><i className="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                             </div>
                         </div>
                     </Popup>) : null }

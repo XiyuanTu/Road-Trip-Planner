@@ -106,10 +106,10 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
     const messages = [
       {
         role: "system",
-        content: `Create a compelling road trip itinerary from ${origin} to ${destination} for the user. 
+        content: `Create a compelling road trip itinerary from ${origin.coordinates} to ${destination.coordinates} for the user. 
         And here are additional information provided by the user: ${prompt}
         Suggest a concise list of must-visit landmarks, including ${waypoints},
-        limiting the total number of places (x) to a maximum of 25. 
+        limiting the total number of waypoints to a maximum of 25. 
         Consider the user's preferences, and provide a balanced and diverse selection of landmarks.`,
         // content: `Create a compelling road trip itinerary for the user from ${origin} to ${destination}.
         // And here are additional information provided by the user: ${prompt}
