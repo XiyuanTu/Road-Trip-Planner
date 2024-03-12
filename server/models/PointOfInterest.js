@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const { Schema } = mongoose;
 
 const requiredNumber = {
@@ -14,7 +15,6 @@ const pointOfInterestSchema = new Schema({
   place_type: {
     type: String,
     required: true,
-    // enum: ['address', 'poi'],
   },
   address: String,
   latitude: {
@@ -43,6 +43,10 @@ const pointOfInterestSchema = new Schema({
     default: false,
   },
   wikidata: {
+    type: String,
+    default: '',
+  },
+  imageURL: {
     type: String,
     default: '',
   },
