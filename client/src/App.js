@@ -262,24 +262,11 @@ const App = () => {
         setWaypoints(items);
     };
 
-    const onMoveEnd = (evt) => {
-        if (selectedStyle === mapStyles[1].value && evt.viewState.zoom > 12) {
-            setViewState(prevState => ({
-                ...prevState, pitch : 60, bearing : 0,
-            }));
-        } else {
-            setViewState(prevState => ({
-                ...prevState, pitch : 0, bearing : 0,
-            }));
-        }
-    };
-
     return <div>
         { !isAuthenticated ? <AuthPage onSignIn={ handleSignIn }/> : <Map
             ref={ mapRef }
             { ...viewState }
             onMove={ evt => setViewState(evt.viewState) }
-            onMoveEnd={ onMoveEnd }
             mapboxAccessToken={ process.env.REACT_APP_MAPBOX_TOKEN }
             style={ {
                 width : showSidebar ? '80vw' : '100vw',
