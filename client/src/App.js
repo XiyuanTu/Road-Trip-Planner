@@ -48,9 +48,6 @@ const App = () => {
     // auth state
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // sidebar state
-    const [showSidebar, setShowSidebar] = useState(false);
-
     // cursor state
     const [cursor, setCursor] = useState('auto');
     const onMouseEnter = useCallback(() => setCursor('pointer'), []);
@@ -108,7 +105,6 @@ const App = () => {
         setLocationEntries([]);
         setIsAuthenticated(false);
         setShowConfirmModal(false);
-        setShowSidebar(false);
         setDirectionsEnabled(false);
         resetAllLocations();
     }
@@ -188,7 +184,10 @@ const App = () => {
 
     // sidebar toggle
     useEffect(() => {
-        setShowSidebar(directionsEnabled);
+        if (mapRef.current) {
+            const map = mapRef.current.getMap();
+            map.resize();
+        }
     }, [directionsEnabled]);
 
     // recalculate route with updates
@@ -218,7 +217,7 @@ const App = () => {
 
             map.fitBounds(bounds, {
                 padding : {
-                    top : 50, bottom : 50, left : 50, right : 400,
+                    top : 50, bottom : 50, left : 50, right : 50,
                 }, duration : 2000,
             });
         }
@@ -269,10 +268,10 @@ const App = () => {
             onMove={ evt => setViewState(evt.viewState) }
             mapboxAccessToken={ process.env.REACT_APP_MAPBOX_TOKEN }
             style={ {
-                width : showSidebar ? '80vw' : '100vw',
+                width : directionsEnabled ? '80vw' : '100vw',
                 height : '100vh',
                 position : 'absolute',
-                left : showSidebar ? '20vw' : '0px',
+                left : directionsEnabled ? '20vw' : '0px',
             } }
             mapStyle={ selectedStyle }
             attributionControl={ false }
@@ -460,7 +459,7 @@ const App = () => {
             </div>
         </Map> }
 
-        { showSidebar && <div className="sidebar bg-light p-3 gradient-background" style={ {
+        { directionsEnabled && <div className="sidebar bg-light p-3 gradient-background" style={ {
             position : 'absolute', top : 0, left : 0, width : '20vw', height : '100%', overflowY : 'auto'
         } }>
             <h2 className="text-center mb-4">AI Trip Planner</h2>
