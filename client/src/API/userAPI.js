@@ -54,3 +54,42 @@ export async function deleteUser(userId) {
         throw new Error(data.message);
     }
 }
+
+export async function getUser(userId) {
+    const headers = {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+    };
+
+    const response = await fetch(`${API_URL}/api/users/${userId}`, {
+        method: 'GET',
+        headers: headers
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+        return data;
+    } else {
+        throw new Error(data.message);
+    }
+}
+
+export async function updateUser(id, updatedFields) {
+    const headers = {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+    };
+
+    const response = await fetch(`${API_URL}/api/users/${id}`, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify(updatedFields),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+        return data;
+    } else {
+        throw new Error(data.message);
+    }
+}

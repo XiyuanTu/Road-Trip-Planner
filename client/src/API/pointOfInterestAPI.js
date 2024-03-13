@@ -5,6 +5,7 @@ export async function listPointOfInterests() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`
     };
+    console.log(headers)
     const response = await fetch(`${API_URL}/api/pointOfInterests`, { headers });
     return response.json();
 }
