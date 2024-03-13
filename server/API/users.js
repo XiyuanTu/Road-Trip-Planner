@@ -84,4 +84,30 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId)
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error finding user' });
+  }
+});
+
+router.put('/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const updatedFields = req.body;
+
+    if (updatedFields.password) {
+      updatedFields.hashPassword = await bcrypt.hash(updatedFields.password, 10);
+    }
+
+    await User.findOneAndUpdate({ _id: userId }, updatedFields)
+    res.json({ message: 'Successfully updated user' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error finding user' });
+  }
+});
+
 module.exports = router;
