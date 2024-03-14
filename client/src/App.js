@@ -357,8 +357,8 @@ const App = () => {
             value={selectedStyle}
             style={{
               position: "absolute",
-              top: 10,
-              right: 90,
+              bottom: 30,
+              right: 10,
               padding: "5px",
               borderRadius: "4px",
               border: "1px solid #ccc",
@@ -583,7 +583,7 @@ const App = () => {
                 padding: 0,
                 height: 29,
                 width: 29,
-                backgroundColor: "white",
+                backgroundColor: "lightblue",
               }}
               onClick={() => setShowProfileModal(true)}
               className="btn"
