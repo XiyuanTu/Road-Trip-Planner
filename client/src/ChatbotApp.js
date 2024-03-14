@@ -1,7 +1,22 @@
 import { useState } from "react";
 import OpenAI from "openai";
 
-const ChatbotApp = ({ origin, destination, waypointSetter }) => {
+import { Popover, notification, Space } from "antd";
+
+const LAT = 1;
+const LON = 0;
+
+const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
+  const [api, contextHolder] = notification.useNotification();
+  const [AIres, setAIres] = AILogSetter;
+  const openNotification = (placement) => {
+    api.info({
+      message: `Information needed`,
+      description: "Please choose your Origin AND your Destination!",
+      placement,
+    });
+  };
+
   const [waypoints, setWaypoints] = waypointSetter;
   const openai = new OpenAI({
     apiKey: process.env.REACT_APP_OPENAI_API_KEY,
@@ -11,18 +26,40 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
   const [loading, setLoading] = useState(false);
 
   const addWaypoints = async (locations) => {
+    let maxLat = Math.max(
+      origin.coordinates[LAT],
+      destination.coordinates[LAT]
+    );
+    let minLat = Math.min(
+      origin.coordinates[LAT],
+      destination.coordinates[LAT]
+    );
+    let maxLon = Math.max(
+      origin.coordinates[LON],
+      destination.coordinates[LON]
+    );
+    let minLon = Math.min(
+      origin.coordinates[LON],
+      destination.coordinates[LON]
+    );
+
     // used to exclude dups
     const wikidataSet = new Set();
     const idSet = new Set();
     waypoints.forEach((point) => {
       wikidataSet.add(point.wikidata);
       idSet.add(point._id);
+      maxLat = Math.max(point.coordinates[LAT], maxLat);
+      minLat = Math.min(point.coordinates[LAT], minLat);
+      maxLon = Math.max(point.coordinates[LON], maxLon);
+      minLon = Math.min(point.coordinates[LON], minLon);
     });
-    
+    console.log(wikidataSet, idSet);
+
     const promises = locations.map(async (location) => {
       const apiUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
         location
-      )}.json?country=us&limit=1&language=en&autocomplete=false&access_token=${
+      )}.json?country=us&fuzzyMatch=true&bbox=${minLon}%2C${minLat}%2C${maxLon}%2C${maxLat}limit=1&language=en&autocomplete=true&worldview=us&access_token=${
         process.env.REACT_APP_MAPBOX_TOKEN
       }`;
 
@@ -38,15 +75,20 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
         if (features && features.length > 0) {
           const result = features[0];
           const wikidata = result.properties.wikidata;
-          // exclude dups
-          if (idSet.has(result.id)) return null;
-          if (wikidata && wikidataSet.has(wikidata)) return null;
+          const name = result.text_en;
+
+          if (
+            idSet.has(result.id) || // exclude dups
+            (wikidata && wikidataSet.has(wikidata)) // exclude dups
+            // name !== location
+          )
+            return null; // exclude nonematch
 
           const point = {
             // _id: result.properties.wikidata || "",
             _id: result.id,
             wikidata: result.properties.wikidata || "",
-            name: result.text_en,
+            name: name,
             coordinates:
               result?.center ||
               (result.geometry?.type === "Point" &&
@@ -76,8 +118,12 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!origin || !destination) {
+      openNotification("top");
+      return;
+    }
     setLoading(true);
-    // console.log(origin, destination, waypoints);
+    console.log(origin, destination, waypoints);
     const tools = [
       {
         type: "function",
@@ -89,7 +135,10 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
             properties: {
               locations: {
                 type: "array",
-                description: "an array which has only 25 slots",
+                description: `an array which has only ${Math.max(
+                  23 - waypoints.length,
+                  0
+                )} slots`,
                 items: {
                   type: "string",
                   description:
@@ -106,11 +155,51 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
     const messages = [
       {
         role: "system",
-        content: `Create a compelling road trip itinerary from ${origin} to ${destination} for the user. 
-        And here are additional information provided by the user: ${prompt}
-        Suggest a concise list of must-visit landmarks, including ${waypoints},
-        limiting the total number of places (x) to a maximum of 25. 
-        Consider the user's preferences, and provide a balanced and diverse selection of landmarks.`,
+        content: `You are a virtual road trip planner. 
+        Your task is to help users plan a road trip from the provided origin to the destination, 
+        passing through specified waypoints. The road trip should include all provided waypoints, 
+        and additional waypoints must be suggested to offer a balanced and diverse selection of landmarks. 
+        Do not include waypoints in the origin and destination.
+        Keep in mind that the total number of waypoints (including both provided and generated ones) should not exceed 20. 
+        Provide a detailed itinerary with interesting points of interest for the user's journey.`,
+
+        // `Create a compelling road trip itinerary from ${
+        //   origin.name
+        // } to ${destination.name} for the user.
+        // ignore those in ${
+        //   origin.name
+        // }, suggest a concise list of must-visit landmarks along the way, including ${waypoints}.
+        // And here are additional information/requirements provided by the user: ${prompt}
+        // Consider the user's preferences, and provide a balanced and diverse selection of landmarks.
+        // stricly limit the total number of places (x) to a maximum of ${Math.max(
+        //   23 - waypoints.length,
+        //   0
+        // )}. `,
+        // content: `Create a compelling road trip itinerary for the user from ${origin} to ${destination}.
+        // And here are additional information provided by the user: ${prompt}
+        // Suggest a concise list of must-visit landmarks, including ${waypoints},
+        // with the total number of places (x) flexible and within the range of 0 to 25.
+        // Consider the user's preferences, as no additional information is available.`,
+      },
+      {
+        role: "user",
+        content: `from ${origin.address} to ${destination.address}
+          waypoints: ${waypoints}
+          extra requirements: ${prompt}
+          `,
+
+        // `Create a compelling road trip itinerary from ${
+        //   origin.name
+        // } to ${destination.name} for the user.
+        // ignore those in ${
+        //   origin.name
+        // }, suggest a concise list of must-visit landmarks along the way, including ${waypoints}.
+        // And here are additional information/requirements provided by the user: ${prompt}
+        // Consider the user's preferences, and provide a balanced and diverse selection of landmarks.
+        // stricly limit the total number of places (x) to a maximum of ${Math.max(
+        //   23 - waypoints.length,
+        //   0
+        // )}. `,
         // content: `Create a compelling road trip itinerary for the user from ${origin} to ${destination}.
         // And here are additional information provided by the user: ${prompt}
         // Suggest a concise list of must-visit landmarks, including ${waypoints},
@@ -128,7 +217,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
 
       const responseMessage = response.choices[0].message;
 
-      // console.log(response.choices[0].message.content);
+      console.log(response.choices[0].message.content);
       //   setApiResponse(response.choices[0].message.content);
 
       // get the plan and produce jsons as routing inputs
@@ -138,8 +227,8 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
         content: `Based on the provided itinerary, visualize all the landmarks/places to visit on a map, 
         excluding all the given places from user(origin, destination, and waypoints). 
         If possible, exclude city/state names—for instance, 
-        'Hollywood Walk of Fame, Los Angeles' should be 'Hollywood Walk of Fame.' 
-        Ensure the depiction adheres to a quantity limit of 25, focusing on the most prominent and significant landmarks.`,
+        'Hollywood Walk of Fame, Los Angeles' should be 'Hollywood Walk of Fame.' `,
+        // Ensure the depiction adheres to a quantity limit of 23, focusing on the most prominent and significant landmarks.`,
         // content: `Based on the provided itinerary, visualize all the landmarks/places to visit on a map,
         // including the examples mentioned except origin and destination.
         // If possible, exclude city/state names—for instance,
@@ -164,6 +253,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
         }
       }
       setLoading(false);
+      setAIres(responseMessage.content);
     } catch (e) {
       console.log(e);
     }
@@ -171,6 +261,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
 
   return (
     <>
+      {contextHolder}
       <form onSubmit={handleSubmit}>
         <div className="card mb-4">
           <div className="card-header">Additional Details for AI</div>
@@ -202,6 +293,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter }) => {
           </button>
         </div>
       </form>
+      
     </>
   );
 };
