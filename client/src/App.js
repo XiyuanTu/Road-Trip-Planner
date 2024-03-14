@@ -28,7 +28,6 @@ import {
   updatePointOfInterest,
 } from "./API/pointOfInterestAPI";
 import { deleteUser, getUser } from "./API/userAPI";
-import ConfirmationModal from "./API/confirmation-modal";
 
 import AuthPage from "./forms/auth-page";
 
@@ -358,8 +357,8 @@ const App = () => {
             value={selectedStyle}
             style={{
               position: "absolute",
-              top: 185,
-              right: 10,
+              top: 10,
+              right: 90,
               padding: "5px",
               borderRadius: "4px",
               border: "1px solid #ccc",

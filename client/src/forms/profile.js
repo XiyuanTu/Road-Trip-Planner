@@ -113,7 +113,7 @@ const Profile = ({
                 onClick={() => setShowConfirmModal(true)}
                 className="btn btn-sm btn-primary btn-danger text-uppercase fw-bold mb-2"
               >
-                Wipe Data
+                Delete Account
               </button>
               <ConfirmationModal
                 show={showConfirmModal}

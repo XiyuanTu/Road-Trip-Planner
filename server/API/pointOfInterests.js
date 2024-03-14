@@ -55,6 +55,7 @@ router.delete('/:entryId', isAuthenticated, async (req, res, next) => {
   }
 });
 
+// eslint-disable-next-line consistent-return
 router.put('/:entryId', isAuthenticated, async (req, res, next) => {
   try {
     const { entryId } = req.params;
