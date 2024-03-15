@@ -200,6 +200,11 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
         //   23 - waypoints.length,
         //   0
         // )}. `,
+        content: `Create a compelling road trip itinerary from ${origin.coordinates} to ${destination.coordinates} for the user. 
+        And here are additional information provided by the user: ${prompt}
+        Suggest a concise list of must-visit landmarks, including ${waypoints},
+        limiting the total number of waypoints to a maximum of 25. 
+        Consider the user's preferences, and provide a balanced and diverse selection of landmarks.`,
         // content: `Create a compelling road trip itinerary for the user from ${origin} to ${destination}.
         // And here are additional information provided by the user: ${prompt}
         // Suggest a concise list of must-visit landmarks, including ${waypoints},
@@ -262,6 +267,17 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
   return (
     <>
       {contextHolder}
+      {loading && (
+          <div className="full-page-overlay">
+            <div className="loading-message">
+              <div className="loading-bar" role="status">
+                <div className="bar"></div>
+              </div>
+              AI is on the way...
+            </div>
+          </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         <div className="card mb-4">
           <div className="card-header">Additional Details for AI</div>

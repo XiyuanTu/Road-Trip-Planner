@@ -7,7 +7,7 @@ Road Trip Planner is a full-stack web application designed to enhance your trave
 - **AI City Recommendations:** Receive suggestions on cities to visit based on your preferences and interests.
 - **Interactive Map View:** Utilize React-Map-GL/Mapbox-GL to explore cities, routes, and points of interest on an interactive map.
 - **Secure User Authentication:** Register and log in securely with JSON Web Tokens (JWT) and bcrypt.js for hashing passwords.
-- **Responsive Design:** A mobile-friendly interface that adapts seamlessly across devices, built with React Bootstrap and FontAwesome for a sleek look.
+- **Responsive Design:** A responsive user interface that fits user needs, built with React Bootstrap and FontAwesome for a sleek look.
 - **Travel Itinerary Management:** Create, edit, and save your travel itineraries with ease.
 
 ## Technologies
@@ -27,12 +27,14 @@ Road Trip Planner is a full-stack web application designed to enhance your trave
 - **Mapbox-GL & React-Map-GL:** JavaScript libraries for interactive, customizable vector maps on the web.
 - **jwt-decode:** A small browser library that helps decode JWTs tokens which are Base64Url encoded.
 - **@mapbox/mapbox-gl-decoder:** Provides utilities for decoding Mapbox GL styles and other Mapbox-specific formats.
+- **@mapbox/mapbox-gl-directions:** Directions API for finding paths between coordinates.
+- **Foursquare/Wikidata:** Unique place identifiers to fetch images and location details.
 
 ### AI Integration
-- **OpenAI API:** 
+- **OpenAI API:** Recommend tourist attractions along the route and hotels/stays, with a chat window for search improvements.
 
 ### Deployment
-- **Firebase:** A Google platform for deployment of project.
+- **Firebase:** A Google platform for project deployment.
 
 ## Data Models
 ### PointOfInterest
@@ -46,9 +48,11 @@ Road Trip Planner is a full-stack web application designed to enhance your trave
 - **category:** what category this place belongs to
 - **landmark:** boolean, true if it is a landmark
 - **wikidata:** universal poi reference
+- **imageUrl:** url of a representative image
 
 ### User
 - **username:** username
+- **email:** email
 - **hashPassword:** hashed password
 - **pointOfInterest:** array of POIs saved by user
 
@@ -70,7 +74,7 @@ Road Trip Planner is a full-stack web application designed to enhance your trave
 #### Frontend
 1. Go to 'client' directory
 2. Install dependencies: `npm install`
-3. Configure Mapbox token, OpenTripMap token, and Firebase token in `.env`
+3. Configure Mapbox token, OpenTripMap token, Firebase token and Foursquare token in `.env`
 4. Start the React app: `npm start`
 
 Open your browser and navigate to `http://localhost:3000`.

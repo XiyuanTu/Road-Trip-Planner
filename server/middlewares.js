@@ -16,7 +16,7 @@ const errorHandler = (error, req, res) => {
   });
 };
 
-// need impl
+// eslint-disable-next-line consistent-return
 const isAuthenticated = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -24,6 +24,7 @@ const isAuthenticated = (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1];
+  // eslint-disable-next-line consistent-return
   jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
     if (err) {
       return res.status(403).json({ message: 'Invalid token' });

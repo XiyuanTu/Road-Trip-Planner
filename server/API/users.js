@@ -7,6 +7,7 @@ const PointOfInterest = require('../models/PointOfInterest');
 
 const router = Router();
 
+// eslint-disable-next-line consistent-return
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -28,14 +29,19 @@ router.post('/login', async (req, res) => {
 
     res.json({ token });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Error logging in' });
   }
 });
 
+// eslint-disable-next-line consistent-return
 router.post('/register', async (req, res) => {
   try {
-    const { username, password, email } = req.body;
+    const {
+      username, password, email, invitationCode,
+    } = req.body;
+    if (invitationCode !== process.env.INVITATION_CODE) {
+      return res.status(400).json({ message: 'Invitation code doesn\'t exist.' });
+    }
     const existingUsername = await User.findOne({ username });
     if (existingUsername) {
       return res.status(400).json({ message: 'Username is already taken, please use a different username.' });
@@ -55,6 +61,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// eslint-disable-next-line consistent-return
 router.delete('/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -67,7 +74,6 @@ router.delete('/:userId', async (req, res) => {
     }
     res.json({ message: 'User and associated log entries deleted successfully' });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Error deleting user' });
   }
 });
@@ -78,6 +84,32 @@ router.get('/', async (req, res) => {
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Error finding users' });
+  }
+});
+
+router.get('/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error finding user' });
+  }
+});
+
+router.put('/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const updatedFields = req.body;
+
+    if (updatedFields.password) {
+      updatedFields.hashPassword = await bcrypt.hash(updatedFields.password, 10);
+    }
+
+    await User.findOneAndUpdate({ _id: userId }, updatedFields);
+    res.json({ message: 'Successfully updated user' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error finding user' });
   }
 });
 
