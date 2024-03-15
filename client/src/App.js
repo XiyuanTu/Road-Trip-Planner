@@ -103,6 +103,8 @@ const App = () => {
   const [isEditing, setIsEditing] = useState(null);
   const [editedTitle, setEditedTitle] = useState("");
 
+  const [AIres, setAIres] = useState("");
+
   // Function to handle title change
   const handleTitleChange = (e, id) => {
     if (id === isEditing) {
@@ -189,6 +191,7 @@ const App = () => {
     setDestination(null);
     setWaypoints([]);
     setSelectedMarkers([]);
+    setAIres("");
   };
 
   // list location entries upon login
@@ -220,6 +223,7 @@ const App = () => {
           map.removeControl(directionsRef.current);
           resetAllLocations();
           setSelectedMarkers([]);
+          setAIres("");
         }
       }
     }
@@ -718,17 +722,39 @@ const App = () => {
             origin={origin}
             destination={destination}
             waypointSetter={[waypoints, setWaypoints]}
+            AILogSetter={[AIres, setAIres]}
           />
 
-          <div className="clear-button-container text-center">
-            <button
-              onClick={resetAllLocations}
-              className="btn btn-danger btn-sm"
-            >
-              Clear Selection
-            </button>
+            <div className="clear-button-container text-center">
+              <button
+                onClick={resetAllLocations}
+                className="btn btn-danger btn-sm"
+              >
+                Clear Selection
+              </button>
+            </div>
           </div>
+      )}
+
+      {AIres && directionsEnabled ? (
+        <div
+          style={{
+            position: "absolute",
+            bottom: "8vh",
+            left: "20.5vw",
+            background: "rgba(0, 0, 0, 0.75)",
+            color: "#fff",
+            width: "300px",
+            height: "300px",
+            overflowY: "scroll", 
+          }}
+        >
+          <text>
+            <pre>{AIres}</pre>
+          </text>
         </div>
+      ) : (
+        <></>
       )}
     </div>
   );
