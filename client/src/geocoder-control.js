@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { useControl, Marker, Popup } from 'react-map-gl';
+import React, {useState} from 'react';
+import {Marker, Popup, useControl} from 'react-map-gl';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
-import { createPointOfInterest } from './API/pointOfInterestAPI';
+import {createPointOfInterest} from './API/pointOfInterestAPI';
 
 export default function GeocoderControl(props) {
     const { getEntries } = props
     const [marker, setMarker] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
+    const [imageURL, setImageURL] = useState(null);
 
     const [additionalInfo, setAdditionalInfo] = useState({
         title: '',
@@ -21,12 +22,56 @@ export default function GeocoderControl(props) {
     });
 
     const addToMyList = async () => {
-        const latitude = marker.props.latitude
-        const longitude = marker.props.longitude
-        await createPointOfInterest({latitude, longitude, ...additionalInfo });
+        const latitude = marker.props.latitude;
+        const longitude = marker.props.longitude;
+
+        await createPointOfInterest({latitude, longitude, imageURL: imageURL, ...additionalInfo });
         setMarker(null);
         setShowPopup(false);
+        setImageURL(null);
         getEntries();
+    };
+
+    const fetchWikidataImage = async (wikidataId) => {
+        if (!wikidataId) return null;
+
+        const url = `https://www.wikidata.org/wiki/Special:EntityData/${wikidataId}.json`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            const entities = data.entities[wikidataId];
+            if (!entities || !entities.claims || !entities.claims.P18) {
+                return null;
+            }
+
+            const imageProperty = entities.claims.P18;
+            const imageFileName = imageProperty[0].mainsnak.datavalue.value;
+            return `https://commons.wikimedia.org/wiki/Special:FilePath/${ encodeURIComponent(imageFileName) }`;
+        } catch (error) {
+            console.error('Error fetching Wikidata image:', error);
+            return null;
+        }
+    };
+
+    const fetchFoursquarePhoto = async (fsqId) => {
+        const API_KEY = process.env.REACT_APP_FOURSQUARE_API_KEY;
+        const url = `https://api.foursquare.com/v3/places/${fsqId}/photos?sort=POPULAR`;
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': API_KEY
+                }
+            });
+            const data = await response.json();
+            if (data && data.length > 0) {
+                const firstPhoto = data[0];
+                return `${ firstPhoto.prefix }original${ firstPhoto.suffix }`;
+            }
+        } catch (error) {
+            console.error('Error fetching photo:', error);
+        }
+        return null;
     };
 
     const geocoder = useControl(() => {
@@ -37,33 +82,42 @@ export default function GeocoderControl(props) {
         });
         ctrl.on('loading', props.onLoading);
         ctrl.on('results', props.onResults);
-        ctrl.on('result', evt => {
+        ctrl.on('result', async evt => {
             props.onResult(evt);
 
-            const { result } = evt;
+            const {result} = evt;
             const location = result?.center || (result.geometry?.type === 'Point' && result.geometry.coordinates);
             if (result) {
                 setAdditionalInfo({
-                    title: result.text,
-                    place_type: result.place_type[0],
-                    address: result.place_name,
-                    id: result.id,
-                    relevance: result.relevance,
-                    category: result.properties.category || '',
-                    landmark: result.properties.landmark || false,
-                    wikidata: result.properties.wikidata || '',
+                    title : result.text,
+                    place_type : result.place_type[0],
+                    address : result.place_name,
+                    id : result.id,
+                    relevance : result.relevance,
+                    category : result.properties.category || '',
+                    landmark : result.properties.landmark || false,
+                    wikidata : result.properties.wikidata || '',
+                    foursquare: result.properties.foursquare || '',
                 });
+
+                let fetchedImageUrl = null;
+                if (result.properties.wikidata) {
+                    fetchedImageUrl = await fetchWikidataImage(result.properties.wikidata);
+                } else if (result.properties.foursquare) {
+                    fetchedImageUrl = await fetchFoursquarePhoto(result.properties.foursquare);
+                }
+                setImageURL(fetchedImageUrl);
             }
 
             if (location && props.marker) {
                 console.log(result);
                 setMarker(null);
                 setMarker(<Marker
-                    {...props.marker}
-                    offset={[0, -40]}
+                    { ...props.marker }
+                    offset={ [0, -40] }
                     anchor="top"
-                    longitude={location[0]}
-                    latitude={location[1]} />);
+                    longitude={ location[0] }
+                    latitude={ location[1] }/>);
                 setSelectedLocation(result);
                 setShowPopup(true);
             } else {
@@ -129,7 +183,7 @@ export default function GeocoderControl(props) {
                     dynamicPosition={true}
                     focusAfterOpen={true}
                     anchor="top"
-                    maxWidth="800px"
+                    maxWidth="600px"
                     onClose={() => {
                         setShowPopup(false);
                         setMarker(null);
@@ -139,14 +193,11 @@ export default function GeocoderControl(props) {
                         <div className="card-body">
                             <h5 className="card-title">{selectedLocation.text}</h5>
                             <p className="card-text">Address: {selectedLocation.place_name}</p>
-                            <p className="card-text">Type: {selectedLocation.place_type[0]}</p>
-                            <p className="card-text">ID: {selectedLocation.id}</p>
-                            <p className="card-text">Relevance: {selectedLocation.relevance}</p>
-                            {selectedLocation.properties.category &&
-                                <p className="card-text">Category: {selectedLocation.properties.category}</p>}
-                            {selectedLocation.properties.landmark && <p className="card-text">Landmark: YES</p>}
-                            {selectedLocation.properties.wikidata &&
-                                <p className="card-text">Wikidata: {selectedLocation.properties.wikidata}</p>}
+                            {imageURL && (
+                                <div className="image-container mb-4" style={{ maxWidth: '600px', height: '300px', overflow: 'hidden' }}>
+                                    <img src={imageURL} alt="Location" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                </div>
+                            )}
                             <div className="button-container d-flex justify-content-between">
                                 <button className="btn btn-primary btn-sm" onClick={addToMyList}>Add to Destinations</button>
                             </div>

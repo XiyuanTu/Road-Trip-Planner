@@ -6,6 +6,9 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css";
+import { CgProfile } from "react-icons/cg";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
 
 import Map, {
   Marker,
@@ -22,9 +25,9 @@ import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-direct
 import {
   listPointOfInterests,
   deletePointOfInterest,
+  updatePointOfInterest,
 } from "./API/pointOfInterestAPI";
-import { deleteUser } from "./API/userAPI";
-import ConfirmationModal from "./API/confirmation-modal";
+import { deleteUser, getUser } from "./API/userAPI";
 
 import AuthPage from "./forms/auth-page";
 
@@ -34,6 +37,7 @@ import { jwtDecode } from "jwt-decode";
 import { LngLatBounds } from "mapbox-gl";
 
 import ChatbotApp from "./ChatbotApp.js";
+import Profile from "./forms/profile.js";
 
 const App = () => {
   const [viewState, setViewState] = React.useState({
@@ -44,14 +48,23 @@ const App = () => {
 
   const mapStyles = [
     { label: "Streets", value: "mapbox://styles/mapbox/streets-v12" },
-    { label: "Cityscape", value: "mapbox://styles/mapbox/standard" },
+    {
+      label: "Cityscape",
+      value: "mapbox://styles/mapbox/standard",
+    },
     { label: "Light", value: "mapbox://styles/mapbox/light-v11" },
-    { label: "Dark", value: "mapbox://styles/mapbox/dark-v11" },
+    {
+      label: "Dark",
+      value: "mapbox://styles/mapbox/dark-v11",
+    },
     {
       label: "Satellite",
       value: "mapbox://styles/mapbox/satellite-streets-v12",
     },
-    { label: "Traffic Day", value: "mapbox://styles/mapbox/navigation-day-v1" },
+    {
+      label: "Traffic Day",
+      value: "mapbox://styles/mapbox/navigation-day-v1",
+    },
     {
       label: "Traffic Night",
       value: "mapbox://styles/mapbox/navigation-night-v1",
@@ -64,10 +77,7 @@ const App = () => {
   };
   // auth state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // sidebar state
-  const [showSidebar, setShowSidebar] = useState(false);
-
+  const [user, setUser] = useState(null);
   // cursor state
   const [cursor, setCursor] = useState("auto");
   const onMouseEnter = useCallback(() => setCursor("pointer"), []);
@@ -77,6 +87,7 @@ const App = () => {
   const [popupInfo, setPopupInfo] = useState({});
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // mapbox-gl-directions api state
   const [directionsEnabled, setDirectionsEnabled] = useState(false);
@@ -85,10 +96,35 @@ const App = () => {
   const [origin, setOrigin] = useState(null);
   const [destination, setDestination] = useState(null);
   const [waypoints, setWaypoints] = useState([]);
-  const [AIres, setAIres] = useState("");
 
   // track marker selection state
   const [selectedMarkers, setSelectedMarkers] = useState([]);
+
+  const [isEditing, setIsEditing] = useState(null);
+  const [editedTitle, setEditedTitle] = useState("");
+
+  // Function to handle title change
+  const handleTitleChange = (e, id) => {
+    if (id === isEditing) {
+      setEditedTitle(e.target.value);
+    }
+  };
+
+  // Function to save the edited title
+  const saveEditedTitle = async (entryId, newTitle) => {
+    try {
+      await updatePointOfInterest(entryId, newTitle);
+      setLocationEntries(
+        locationEntries.map((entry) =>
+          entry._id === entryId ? { ...entry, title: newTitle } : entry
+        )
+      );
+      setIsEditing(null);
+      setEditedTitle("");
+    } catch (error) {
+      console.error("Error updating title:", error);
+    }
+  };
 
   // handle user logic
   const handleSignIn = (token) => {
@@ -101,7 +137,7 @@ const App = () => {
     setLocationEntries([]);
     setIsAuthenticated(false);
     setShowConfirmModal(false);
-    setShowSidebar(false);
+    setShowProfileModal(false);
     setDirectionsEnabled(false);
     resetAllLocations();
   };
@@ -139,6 +175,11 @@ const App = () => {
     setLocationEntries(pointEntries);
   };
 
+  const getCurrentUser = async (userId) => {
+    const user = await getUser(userId);
+    setUser(user);
+  };
+
   // used to reset selections on map
   const resetAllLocations = () => {
     if (directionsRef.current) {
@@ -148,7 +189,6 @@ const App = () => {
     setDestination(null);
     setWaypoints([]);
     setSelectedMarkers([]);
-    setAIres("");
   };
 
   // list location entries upon login
@@ -157,6 +197,11 @@ const App = () => {
     if (token) {
       setIsAuthenticated(true);
       getEntries();
+    }
+    if (isAuthenticated) {
+      const decoded = jwtDecode(token);
+      const userId = decoded.id;
+      getCurrentUser(userId);
     }
   }, [isAuthenticated]);
 
@@ -182,7 +227,10 @@ const App = () => {
 
   // sidebar toggle
   useEffect(() => {
-    setShowSidebar(directionsEnabled);
+    if (mapRef.current) {
+      const map = mapRef.current.getMap();
+      map.resize();
+    }
   }, [directionsEnabled]);
 
   // recalculate route with updates
@@ -215,7 +263,7 @@ const App = () => {
           top: 50,
           bottom: 50,
           left: 50,
-          right: 400,
+          right: 50,
         },
         duration: 2000,
       });
@@ -264,24 +312,6 @@ const App = () => {
     setWaypoints(items);
   };
 
-  const onMoveEnd = (evt) => {
-    if (selectedStyle === mapStyles[1].value && evt.viewState.zoom > 12) {
-      setViewState((prevState) => ({
-        ...prevState,
-        pitch: 45,
-        bearing: 30,
-        duration: 1000,
-      }));
-    } else {
-      setViewState((prevState) => ({
-        ...prevState,
-        pitch: 0,
-        bearing: 0,
-        duration: 1000,
-      }));
-    }
-  };
-
   return (
     <div>
       {!isAuthenticated ? (
@@ -291,13 +321,12 @@ const App = () => {
           ref={mapRef}
           {...viewState}
           onMove={(evt) => setViewState(evt.viewState)}
-          onMoveEnd={onMoveEnd}
           mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
           style={{
-            width: showSidebar ? "80vw" : "100vw",
+            width: directionsEnabled ? "80vw" : "100vw",
             height: "100vh",
             position: "absolute",
-            left: showSidebar ? "20vw" : "0px",
+            left: directionsEnabled ? "20vw" : "0px",
           }}
           mapStyle={selectedStyle}
           attributionControl={false}
@@ -315,7 +344,7 @@ const App = () => {
           )}
 
           <AttributionControl
-            customAttribution="Map design by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
+            customAttribution="App by LocalBinNotFound, Xiyuan Tu, Airline-Wuhu, Antonyyqr"
             position="bottom-right"
           />
           <GeolocateControl />
@@ -328,7 +357,7 @@ const App = () => {
             value={selectedStyle}
             style={{
               position: "absolute",
-              top: 185,
+              bottom: 30,
               right: 10,
               padding: "5px",
               borderRadius: "4px",
@@ -435,11 +464,39 @@ const App = () => {
                           })
                         }
                         anchor="top"
-                        maxWidth="800px"
+                        maxWidth="600px"
                       >
                         <div className="popup card ">
                           <div className="card-body">
-                            <h5 className="card-title">{entry.title}</h5>
+                            {isEditing === entry._id ? (
+                              <input
+                                type="text"
+                                value={editedTitle}
+                                onChange={(e) =>
+                                  handleTitleChange(e, entry._id)
+                                }
+                                onBlur={() =>
+                                  saveEditedTitle(entry._id, editedTitle)
+                                }
+                                className="form-control"
+                              />
+                            ) : (
+                              <h5 className="card-title">
+                                {entry.title}
+                                <i
+                                  className="fas fa-pencil-alt"
+                                  style={{
+                                    marginLeft: "10px",
+                                    cursor: "pointer",
+                                  }}
+                                  onClick={() => {
+                                    setIsEditing(entry._id);
+                                    setEditedTitle(entry.title);
+                                  }}
+                                />
+                              </h5>
+                            )}
+
                             {entry.address && (
                               <p className="card-text">
                                 Address: {entry.address}
@@ -450,22 +507,49 @@ const App = () => {
                                 Category: {entry.category}
                               </p>
                             )}
-                            <div className="button-container d-flex justify-content-between">
-                              <button className="btn btn-primary btn-sm">
-                                Update
-                              </button>
+                            {entry.imageURL && (
+                              <div
+                                className="image-container mb-4"
+                                style={{
+                                  maxWidth: "600px",
+                                  height: "300px",
+                                  overflow: "hidden",
+                                }}
+                              >
+                                <img
+                                  src={entry.imageURL}
+                                  alt="Location"
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "contain",
+                                  }}
+                                />
+                              </div>
+                            )}
+                            <div
+                              className="delete-container"
+                              style={{ textAlign: "right" }}
+                            >
                               <button
-                                className="btn btn-danger btn-sm"
+                                className="btn btn-outline-danger btn-sm"
+                                style={{ padding: "0.25rem 0.5rem" }}
                                 onClick={async () => {
-                                  const success = await deletePointOfInterest(
-                                    entry._id
+                                  // Add your confirmation logic here
+                                  const confirmDeletion = window.confirm(
+                                    "Are you sure you want to delete this?"
                                   );
-                                  if (success) {
-                                    await getEntries();
+                                  if (confirmDeletion) {
+                                    const success = await deletePointOfInterest(
+                                      entry._id
+                                    );
+                                    if (success) {
+                                      await getEntries();
+                                    }
                                   }
                                 }}
                               >
-                                Delete
+                                <i className="fas fa-trash"></i>
                               </button>
                             </div>
                           </div>
@@ -476,32 +560,41 @@ const App = () => {
                 )
             )}
 
-          <button
-            style={{ position: "absolute", bottom: 60, right: 15 }}
-            className="btn btn-sm btn-primary btn-login text-uppercase fw-bold mb-2"
-            onClick={handleSignOut}
+          <Profile
+            show={showProfileModal}
+            handleClose={() => setShowProfileModal(false)}
+            user={user}
+            setUser={setUser}
+            showConfirmModal={showConfirmModal}
+            setShowConfirmModal={setShowConfirmModal}
+            locationEntries={locationEntries}
+            handleDeleteAccount={handleDeleteAccount}
+            handleSignOut={handleSignOut}
+          />
+          <OverlayTrigger
+            placement="bottom"
+            overlay={<Tooltip>Profile</Tooltip>}
           >
-            Logout
-          </button>
-          <div>
             <button
-              style={{ position: "absolute", bottom: 20, right: 15 }}
-              onClick={() => setShowConfirmModal(true)}
-              className="btn btn-sm btn-primary btn-danger text-uppercase fw-bold mb-2"
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 50,
+                padding: 0,
+                height: 29,
+                width: 29,
+                backgroundColor: "lightblue",
+              }}
+              onClick={() => setShowProfileModal(true)}
+              className="btn"
             >
-              Wipe Data
+              <CgProfile style={{ height: 20, width: 20 }} />
             </button>
-            <ConfirmationModal
-              show={showConfirmModal}
-              handleClose={() => setShowConfirmModal(false)}
-              handleConfirm={handleDeleteAccount}
-              message="Are you sure you want to delete your account and all related data? This action cannot be undone."
-            />
-          </div>
+          </OverlayTrigger>
         </Map>
       )}
 
-      {showSidebar && (
+      {directionsEnabled && (
         <div
           className="sidebar bg-light p-3 gradient-background"
           style={{
@@ -602,30 +695,30 @@ const App = () => {
                 <p className="text-danger">NOT SELECTED</p>
               )}
             </div>
-            <div className="card mb-3">
-              <div className="card-header">Destination</div>
-              <div className="card-body d-flex justify-content-between align-items-center">
-                {destination ? (
-                  <>
-                    <p className="mb-0 text-dark">{destination.name}</p>
-                    <button
-                      className="btn btn-outline-danger btn-sm"
-                      onClick={() => removeDestination()}
-                    >
-                      <i className="fas fa-minus"></i>
-                    </button>
-                  </>
-                ) : (
-                  <p className="text-danger">NOT SELECTED</p>
-                )}
-              </div>
+          </div>
+          <div className="card mb-3">
+            <div className="card-header">Destination</div>
+            <div className="card-body d-flex justify-content-between align-items-center">
+              {destination ? (
+                <>
+                  <p className="mb-0 text-dark">{destination.name}</p>
+                  <button
+                    className="btn btn-outline-danger btn-sm"
+                    onClick={() => removeDestination()}
+                  >
+                    <i className="fas fa-minus"></i>
+                  </button>
+                </>
+              ) : (
+                <p className="text-danger">NOT SELECTED</p>
+              )}
             </div>
-            <ChatbotApp
-              origin={origin}
-              destination={destination}
-              waypointSetter={[waypoints, setWaypoints]}
-              AILogSetter={[AIres, setAIres]}
-            />
+          </div>
+          <ChatbotApp
+            origin={origin}
+            destination={destination}
+            waypointSetter={[waypoints, setWaypoints]}
+          />
 
             <div className="clear-button-container text-center">
               <button
@@ -643,12 +736,12 @@ const App = () => {
         <div
           style={{
             position: "absolute",
-            bottom:"10vh" ,
-            left: "21vw",
+            top: 720,
+            left: 520,
             background: "rgba(0, 0, 0, 0.75)",
             color: "#fff",
-            width: "300px",
-            height: "200px",
+            width: "800px",
+            height: "500px",
             overflowY: "scroll", 
           }}
         >

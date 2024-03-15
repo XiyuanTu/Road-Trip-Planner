@@ -22,8 +22,9 @@ const userSchema = new mongoose.Schema({
   }],
 });
 
+// eslint-disable-next-line func-names
 userSchema.methods.isValidPassword = async function (password) {
-  return await bcrypt.compare(password, this.hashPassword);
+  return bcrypt.compare(password, this.hashPassword);
 };
 
 const User = mongoose.model('User', userSchema);

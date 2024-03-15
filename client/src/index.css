@@ -334,3 +334,46 @@ input:checked + .slider:before {
   background-size: 100% 100%;
   animation: gradient-animation 10s ease infinite;
 }
+
+.full-page-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.loading-message {
+  color: white;
+  font-size: 24px;
+  text-align: center;
+}
+
+.loading-bar {
+  width: 150px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+}
+
+.bar {
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  margin: 0 5px;
+  animation: runBot 2s linear infinite;
+}
+
+@keyframes runBot {
+  0%, 100% {
+    transform: translateX(-30px);
+  }
+  50% {
+    transform: translateX(50px);
+  }
+}
