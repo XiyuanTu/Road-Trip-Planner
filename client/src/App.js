@@ -720,15 +720,37 @@ const App = () => {
             waypointSetter={[waypoints, setWaypoints]}
           />
 
-          <div className="clear-button-container text-center">
-            <button
-              onClick={resetAllLocations}
-              className="btn btn-danger btn-sm"
-            >
-              Clear Selection
-            </button>
+            <div className="clear-button-container text-center">
+              <button
+                onClick={resetAllLocations}
+                className="btn btn-danger btn-sm"
+              >
+                Clear Selection
+              </button>
+            </div>
           </div>
         </div>
+      )}
+
+      {AIres ? (
+        <div
+          style={{
+            position: "absolute",
+            top: 720,
+            left: 520,
+            background: "rgba(0, 0, 0, 0.75)",
+            color: "#fff",
+            width: "800px",
+            height: "500px",
+            overflowY: "scroll", 
+          }}
+        >
+          <text>
+            <pre>{AIres}</pre>
+          </text>
+        </div>
+      ) : (
+        <></>
       )}
     </div>
   );
