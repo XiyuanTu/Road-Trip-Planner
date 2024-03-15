@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-
+import {marked} from 'marked';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -587,7 +587,7 @@ const App = () => {
                 padding: 0,
                 height: 29,
                 width: 29,
-                backgroundColor: "lightblue",
+                backgroundColor: "lightpink",
               }}
               onClick={() => setShowProfileModal(true)}
               className="btn"
@@ -737,25 +737,27 @@ const App = () => {
       )}
 
       {AIres && directionsEnabled ? (
-        <div
-          style={{
-            position: "absolute",
-            bottom: "8vh",
-            left: "20.5vw",
-            background: "rgba(0, 0, 0, 0.75)",
-            color: "#fff",
-            width: "300px",
-            height: "300px",
-            overflowY: "scroll", 
-          }}
-        >
-          <text>
-            <pre>{AIres}</pre>
-          </text>
-        </div>
-      ) : (
-        <></>
+          <div
+              style={{
+                position: "absolute",
+                bottom: "10vh",
+                right: "3vw",
+                background: "#09090988",
+                color: "#fff",
+                width: "30vw",
+                height: "80vh",
+                overflowY: "scroll",
+                padding: "10px",
+                borderRadius: "15px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                fontSize: 12,
+              }}
+              dangerouslySetInnerHTML={{ __html: marked(AIres) }}
+              />
+        ) : (
+          <></>
       )}
+
     </div>
   );
 };

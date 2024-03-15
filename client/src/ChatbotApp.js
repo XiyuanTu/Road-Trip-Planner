@@ -1,7 +1,7 @@
-import { useState } from "react";
+import {useState} from "react";
 import OpenAI from "openai";
 
-import { notification } from "antd";
+import {notification} from "antd";
 
 const LAT = 1;
 const LON = 0;
@@ -87,14 +87,10 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
           if (idSet.has(geonameId)) return null; // exclude dups
 
           if (lng < maxLon && lng > minLon && lat < maxLat && lat > minLat) {
-            const point = {
-              _id: String(geonameId),
-              wikidata: "", //TODO: FIND WIKIDATA
-              name: toponymName,
-              coordinates: [lng, lat],
-              address: "address", // TODO: FIND ADDRESS
+            return {
+              _id : String(geonameId), wikidata : "", //TODO: FIND WIKIDATA
+              name : toponymName, coordinates : [lng, lat], address : "address", // TODO: FIND ADDRESS
             };
-            return point;
           }
         }
 
@@ -123,17 +119,13 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
           )
             return null; // exclude nonematch
 
-          const point = {
-            _id: result.id,
-            wikidata: result.properties.wikidata || "",
-            name: name,
-            coordinates:
-              result?.center ||
-              (result.geometry?.type === "Point" &&
-                result.geometry.coordinates),
-            address: result.place_name_en,
+          return {
+            _id : result.id,
+            wikidata : result.properties.wikidata || "",
+            name : name,
+            coordinates : result?.center || (result.geometry?.type === "Point" && result.geometry.coordinates),
+            address : result.place_name_en,
           };
-          return point;
         } else {
           console.log("No results found for location: ", location);
           return null;
@@ -198,7 +190,8 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
         Your task is to help users plan a road trip from the provided origin to the destination, 
         passing through specified waypoints. The road trip should include all provided waypoints, 
         and additional waypoints must be suggested to offer a balanced and diverse selection of landmarks. 
-        Do NOT include waypoints within 2 hours of drive of origin, but do include for destination.
+        Do NOT include waypoints within 100 miles from ${origin.address}, but do include waypoints for destination.
+        List the waypoints in order to avoid retrogression as much as possible.
         Keep in mind that the total number of waypoints (including both provided and generated ones) should not exceed 20. 
         Provide a detailed itinerary with interesting points of interest for the user's journey.`,
 
@@ -297,7 +290,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
           <textarea
             maxLength="100"
             className="form-control"
-            type="text"
+            typeof="text"
             value={prompt}
             placeholder="Specify additional preferences in natural language (max length 100)"
             onChange={(e) => setPrompt(e.target.value)}
