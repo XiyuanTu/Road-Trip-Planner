@@ -103,6 +103,8 @@ const App = () => {
   const [isEditing, setIsEditing] = useState(null);
   const [editedTitle, setEditedTitle] = useState("");
 
+  const [AIres, setAIres] = useState("");
+
   // Function to handle title change
   const handleTitleChange = (e, id) => {
     if (id === isEditing) {
@@ -189,6 +191,7 @@ const App = () => {
     setDestination(null);
     setWaypoints([]);
     setSelectedMarkers([]);
+    setAIres("");
   };
 
   // list location entries upon login
@@ -220,6 +223,7 @@ const App = () => {
           map.removeControl(directionsRef.current);
           resetAllLocations();
           setSelectedMarkers([]);
+          setAIres("");
         }
       }
     }
@@ -718,6 +722,7 @@ const App = () => {
             origin={origin}
             destination={destination}
             waypointSetter={[waypoints, setWaypoints]}
+            AILogSetter={[AIres, setAIres]}
           />
 
             <div className="clear-button-container text-center">
@@ -729,19 +734,18 @@ const App = () => {
               </button>
             </div>
           </div>
-        </div>
       )}
 
-      {AIres ? (
+      {AIres && directionsEnabled ? (
         <div
           style={{
             position: "absolute",
-            top: 720,
-            left: 520,
+            bottom: "8vh",
+            left: "20.5vw",
             background: "rgba(0, 0, 0, 0.75)",
             color: "#fff",
-            width: "800px",
-            height: "500px",
+            width: "300px",
+            height: "300px",
             overflowY: "scroll", 
           }}
         >
