@@ -198,7 +198,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
         Your task is to help users plan a road trip from the provided origin to the destination, 
         passing through specified waypoints. The road trip should include all provided waypoints, 
         and additional waypoints must be suggested to offer a balanced and diverse selection of landmarks. 
-        Do not include waypoints in the origin and destination.
+        Do NOT include waypoints within 2 hours of drive of origin, but do include for destination.
         Keep in mind that the total number of waypoints (including both provided and generated ones) should not exceed 20. 
         Provide a detailed itinerary with interesting points of interest for the user's journey.`,
 
