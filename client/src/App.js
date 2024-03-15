@@ -643,12 +643,12 @@ const App = () => {
         <div
           style={{
             position: "absolute",
-            top: 720,
-            left: 520,
+            bottom:"10vh" ,
+            left: "21vw",
             background: "rgba(0, 0, 0, 0.75)",
             color: "#fff",
-            width: "800px",
-            height: "500px",
+            width: "300px",
+            height: "200px",
             overflowY: "scroll", 
           }}
         >
