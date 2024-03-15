@@ -1,4 +1,4 @@
-const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:1337' : 'https://travel-log-api.now.sh';
+const API_URL = process.env.NODE_ENV === 'production' ? 'https://road-trip-planner-server-orpin.vercel.app' : 'http://localhost:1337';
 
 export async function signIn(username, password) {
     const headers = {
