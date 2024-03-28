@@ -1,7 +1,7 @@
-import {useState} from "react";
+import { useState } from "react";
 import OpenAI from "openai";
 
-import {notification} from "antd";
+import { notification } from "antd";
 
 const LAT = 1;
 const LON = 0;
@@ -64,12 +64,11 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
     maxLon += 2;
     minLon -= 2;
     const promises = locations.map(async (location) => {
-    
-      const apiUrl = `http://api.geonames.org/searchJSON?name=${encodeURIComponent(
+
+      const apiUrl = `https://secure.geonames.org/searchJSON?name=${encodeURIComponent(
         location
-      )}&maxRows=1&country=US&username=${
-        process.env.REACT_APP_GEONAMES_USERNAME
-      }`;
+      )}&maxRows=1&country=US&username=${process.env.REACT_APP_GEONAMES_USERNAME
+        }`;
       try {
         const response = await fetch(apiUrl);
         if (!response.ok) {
@@ -81,24 +80,23 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
 
         if (features && features.length > 0) {
           const result = features[0];
-          
+
           const { lng, lat, geonameId, toponymName } = result;
 
           if (idSet.has(geonameId)) return null; // exclude dups
 
           if (lng < maxLon && lng > minLon && lat < maxLat && lat > minLat) {
             return {
-              _id : String(geonameId), wikidata : "", //TODO: FIND WIKIDATA
-              name : toponymName, coordinates : [lng, lat], address : "address", // TODO: FIND ADDRESS
+              _id: String(geonameId), wikidata: "", //TODO: FIND WIKIDATA
+              name: toponymName, coordinates: [lng, lat], address: "address", // TODO: FIND ADDRESS
             };
           }
         }
 
         const mapboxiUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
           location
-        )}.json?country=us&fuzzyMatch=true&bbox=${minLon}%2C${minLat}%2C${maxLon}%2C${maxLat}limit=1&language=en&autocomplete=true&worldview=us&access_token=${
-          process.env.REACT_APP_MAPBOX_TOKEN
-        }`;
+        )}.json?country=us&fuzzyMatch=true&bbox=${minLon}%2C${minLat}%2C${maxLon}%2C${maxLat}limit=1&language=en&autocomplete=true&worldview=us&access_token=${process.env.REACT_APP_MAPBOX_TOKEN
+          }`;
         const responseM = await fetch(mapboxiUrl);
         if (!responseM.ok) {
           throw new Error(`HTTP error! Status: ${responseM.status}`);
@@ -120,11 +118,11 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
             return null; // exclude nonematch
 
           return {
-            _id : result.id,
-            wikidata : result.properties.wikidata || "",
-            name : name,
-            coordinates : result?.center || (result.geometry?.type === "Point" && result.geometry.coordinates),
-            address : result.place_name_en,
+            _id: result.id,
+            wikidata: result.properties.wikidata || "",
+            name: name,
+            coordinates: result?.center || (result.geometry?.type === "Point" && result.geometry.coordinates),
+            address: result.place_name_en,
           };
         } else {
           console.log("No results found for location: ", location);
@@ -195,7 +193,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
         Keep in mind that the total number of waypoints (including both provided and generated ones) should not exceed 20. 
         Provide a detailed itinerary with interesting points of interest for the user's journey.`,
 
-       
+
       },
       {
         role: "user",
@@ -244,7 +242,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
         excluding all the given places from user(origin, destination, and waypoints). 
         If possible, exclude city/state names—for instance, 
         'Hollywood Walk of Fame, Los Angeles' should be 'Hollywood Walk of Fame.' `,
-        
+
       });
       const secondRes = await openai.chat.completions.create({
         model: "gpt-3.5-turbo-0125",
@@ -274,14 +272,14 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
     <>
       {contextHolder}
       {loading && (
-          <div className="full-page-overlay">
-            <div className="loading-message">
-              <div className="loading-bar" role="status">
-                <div className="bar"></div>
-              </div>
-              AI is on the way...
+        <div className="full-page-overlay">
+          <div className="loading-message">
+            <div className="loading-bar" role="status">
+              <div className="bar"></div>
             </div>
+            AI is on the way...
           </div>
+        </div>
       )}
 
       <form onSubmit={handleSubmit}>
@@ -297,7 +295,7 @@ const ChatbotApp = ({ origin, destination, waypointSetter, AILogSetter }) => {
           ></textarea>
         </div>
         <div className="clear-button-container text-center">
-         
+
           <button className="btn btn-success" type="submit" disabled={loading}>
             {loading ? (
               <div className="spinner-border" role="status">
